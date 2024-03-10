@@ -1,0 +1,191 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .h1 {
+    @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;
+  }
+  .h2 {
+    @apply scroll-m-20 border-b border-b-slate-200 text-3xl font-semibold tracking-tight transition-colors first:mt-0 dark:border-b-slate-700;
+  }
+  .center {
+    @apply absolute top-[50%] left-[50%] transform -translate-x-2/4 -translate-y-2/4;
+  }
+  .center--top {
+    @apply top-[24%];
+  }
+}
+body {
+  user-select: none;
+  -moz-user-select: none; /* Firefox */
+  -webkit-user-select: none; /* Chrome, Safari, and Opera */
+}
+.app__mask {
+  transition: all 0.8s;
+}
+.scroll {
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.scroll--fix {
+  overscroll-behavior: auto;
+}
+.scroll--hidden::-webkit-scrollbar {
+  display: none;
+}
+.scroll-view__back {
+  /* background-image: url("https://cdn.weipaitang.com/static/2019121808df9be1-82c2-9be182c2-7a74-76514f6ee9ff-W100H159");
+  background-size: 100% 100%; */
+  background: url("https://cdn.weipaitang.com/static/2019121808df9be1-82c2-9be182c2-7a74-76514f6ee9ff-W100H159") 0% 0% /
+    100% 100% no-repeat;
+}
+.scroll-view__loading {
+  transition: all 0.2s;
+}
+.blur-bg {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.5);
+}
+.huizhang {
+  position: relative;
+  border-radius: 10px 10px 10px 0px;
+  color: #fff;
+  padding: 2px 4px;
+  font-size: 10px;
+  line-height: 12px;
+  background: linear-gradient(to right bottom, rgba(255, 255, 255, 0.4), transparent) var(--weui-BRAND);
+  background-blend-mode: soft-light;
+}
+/* .huizhang::before {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  left: 0;
+  bottom: -5px;
+  background-color: inherit;
+  filter: brightness(0.7);
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+} */
+
+.animate-bar1 {
+  animation-name: playing-bar1;
+}
+.animate-bar2 {
+  animation-name: playing-bar2;
+  animation-delay: 0.1s;
+}
+.animate-bar3 {
+  animation-name: playing-bar3;
+  animation-delay: 0.2s;
+}
+.play-animation {
+  display: flex;
+  align-items: flex-end;
+  height: 100px;
+}
+.bar {
+  width: 4px;
+  margin: 0 2px;
+  background-color: var(--weui-FG-1);
+  animation-duration: 0.8s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+.bar1 {
+  animation-name: playing-bar1;
+}
+.bar2 {
+  animation-name: playing-bar2;
+  animation-delay: 0.1s;
+}
+.bar3 {
+  animation-name: playing-bar3;
+  animation-delay: 0.4s;
+}
+@keyframes playing-bar1 {
+  0%,
+  40%,
+  100% {
+    height: 8px;
+  }
+  20% {
+    height: 16px;
+  }
+  60% {
+    height: 28px;
+  }
+}
+
+@keyframes playing-bar2 {
+  0%,
+  40%,
+  100% {
+    height: 8px;
+  }
+  20% {
+    height: 24px;
+  }
+  60% {
+    height: 16px;
+  }
+}
+
+@keyframes playing-bar3 {
+  0%,
+  40%,
+  100% {
+    height: 6px;
+  }
+  20% {
+    height: 14px;
+  }
+  60% {
+    height: 20px;
+  }
+}
+
+.__a {
+  animation: __a 0.1s;
+}
+@keyframes __a {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes loading-show {
+  100% {
+    height: 40px;
+  }
+}
+@keyframes loading-close {
+  0% {
+    height: 40px;
+  }
+  100% {
+    height: 0;
+  }
+}
+@keyframes loading-cancel {
+  100% {
+    height: 0;
+  }
+}
+
+.animate {
+  transition: all 0.5s ease-in-out; /* 添加过渡效果 */
+}
+.slide-out {
+  transform: translateX(100%); /* 初始状态时元素向上滑出可视区域 */
+  /* opacity: 0; */
+}
+.slide-in {
+  transform: translateX(0); /* 当添加 .active 类时，元素滑入可视区域 */
+  /* opacity: 1; */
+}

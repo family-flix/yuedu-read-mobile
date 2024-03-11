@@ -120,14 +120,6 @@ export const HomeHistoryTabContent: ViewComponentWithMenu = React.memo((props) =
             history.push("root.season_playing", { id: media_id });
             return;
           }
-          if (type === MediaTypes.Movie) {
-            // moviePlayingPageV2.query = {
-            //   id: media_id,
-            // };
-            // app.showView(moviePlayingPageV2);
-            history.push("root.movie_playing", { id: media_id });
-            return;
-          }
         },
         // onLongPress(record) {
         //   console.log("123");
@@ -221,10 +213,6 @@ export const HomeHistoryTabContent: ViewComponentWithMenu = React.memo((props) =
                     const { type, media_id } = record;
                     if (type === MediaTypes.Season) {
                       history.push("root.season_playing", { id: media_id });
-                      return;
-                    }
-                    if (type === MediaTypes.Movie) {
-                      history.push("root.movie_playing", { id: media_id });
                       return;
                     }
                   }}

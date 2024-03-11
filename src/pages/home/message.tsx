@@ -180,13 +180,6 @@ export const HomeMessagePage: ViewComponent = React.memo((props) => {
                         history.push("root.season_playing", { id: media.id });
                         return;
                       }
-                      if (media && media.type === MediaTypes.Movie) {
-                        // moviePlayingPageV2.query = {
-                        //   id: media.id,
-                        // };
-                        // app.showView(moviePlayingPageV2);
-                        history.push("root.movie_playing", { id: media.id });
-                      }
                     }}
                   >
                     <div className="break-all text-lg">{msg}</div>

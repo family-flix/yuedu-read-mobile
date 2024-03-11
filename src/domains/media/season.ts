@@ -298,7 +298,7 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
     // this.emit(Events.StateChange, { ...this.state });
     // return Result.Ok(null);
   }
-  async changeSourceFile(sourceFile: CurNovelChapter["curFile"]) {
+  async changeSourceFile(sourceFile: { id: string; name: string }) {
     if (this.profile === null) {
       const msg = this.tip({ text: ["视频还未加载完成"] });
       return Result.Err(msg);
@@ -307,14 +307,14 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
       const msg = this.tip({ text: ["视频还未加载完成"] });
       return Result.Err(msg);
     }
-    const res = await this.$source.load({ id: sourceFile.id });
-    this.curChapter.curFile = sourceFile;
-    if (res.error) {
+    const r = await this.$source.load({ id: sourceFile.id });
+    if (r.error) {
       this.tip({
-        text: [res.error.message],
+        text: [r.error.message],
       });
-      return Result.Err(res.error);
+      return Result.Err(r.error);
     }
+    this.curChapter.curFile = r.data;
     // this.emit(Events.SourceFileChange, { ...res.data, progress: this.currentTime });
     return Result.Ok(null);
   }

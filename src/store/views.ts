@@ -10,18 +10,12 @@ import { HomeIndexPage } from "@/pages/home";
 import { HomeMessagePage } from "@/pages/home/message";
 import { HomeRecommendedTabContent } from "@/pages/home-tabs/recommended";
 import { HomeSeasonTabContent } from "@/pages/home-tabs/season";
-import { HomeMovieTabContent } from "@/pages/home-tabs/movie";
 import { HomeHistoryTabContent } from "@/pages/home-tabs/history";
 import { HomeMinePage } from "@/pages/home/mine";
 /** 搜索 */
 import { MediaSearchPage } from "@/pages/search";
 /** 视频播放 */
-// import { TVPlayingPage } from "@/pages/tv/play";
 import { SeasonPlayingPageV2 } from "@/pages/read";
-// import { TVOuterPlayersPage } from "@/pages/tv/outerplayers";
-// import { MoviePlayingPage } from "@/pages/movie/play";
-import { MoviePlayingPageV2 } from "@/pages/article";
-// import { OuterPlayersPage } from "@/pages/outplayers";
 /** 其他 */
 // import { Test1Page } from "@/pages/test1";
 import { NotFoundPage } from "@/pages/not-found";
@@ -39,14 +33,12 @@ export const pages: Omit<Record<PageKeys, ViewComponent | ViewComponentWithMenu>
   "root.home_layout.home_index": HomeIndexPage,
   "root.home_layout.home_index.home_index_recommended": HomeRecommendedTabContent,
   "root.home_layout.home_index.home_index_history": HomeHistoryTabContent,
-  "root.home_layout.home_index.home_index_movie": HomeMovieTabContent,
   "root.home_layout.home_index.home_index_season": HomeSeasonTabContent,
   "root.mine": HomeMinePage,
   "root.search": MediaSearchPage,
   "root.messages": HomeMessagePage,
   "root.invitee": InviteeListPage,
   "root.season_playing": SeasonPlayingPageV2,
-  "root.movie_playing": MoviePlayingPageV2,
   "root.notfound": NotFoundPage,
 };
 

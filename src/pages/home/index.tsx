@@ -144,12 +144,6 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
               language: MediaOriginCountry.CN,
             },
           },
-          {
-            id: "movie",
-            name: "root.home_layout.home_index.home_index_movie",
-            text: "电影",
-            query: {},
-          },
           // {
           //   id: "animate",
           //   text: "动漫",

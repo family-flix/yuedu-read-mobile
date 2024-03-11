@@ -9,7 +9,6 @@ import { Show } from "@/packages/ui/show";
 import { Sheet, ScrollView, Video, ListView } from "@/components/ui";
 import { Presence } from "@/components/ui/presence";
 import { PlayingIcon } from "@/components/playing";
-import { SeasonMediaSettings } from "@/components/season-media-settings";
 import { DynamicContent } from "@/components/dynamic-content";
 import { ScrollViewCore, DialogCore, PresenceCore } from "@/domains/ui";
 import { NovelReaderCore } from "@/domains/media/season";

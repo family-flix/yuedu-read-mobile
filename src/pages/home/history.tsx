@@ -2,11 +2,10 @@
  * @file 我的播放历史页面
  */
 import React, { useState } from "react";
-import { ArrowUp, MoreHorizontal, MoreVertical } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 
 import { ViewComponentWithMenu } from "@/store/types";
 import { ScrollView, Skeleton, LazyImage, ListView, Dialog, Node } from "@/components/ui";
-import { Show } from "@/components/ui/show";
 import { RequestCoreV2 } from "@/domains/request/v2";
 import { ListCoreV2 } from "@/domains/list/v2";
 import { ScrollViewCore, DialogCore, NodeInListCore, ImageInListCore } from "@/domains/ui";
@@ -111,14 +110,6 @@ export const HomeHistoryPage: ViewComponentWithMenu = React.memo((props) => {
             // };
             // app.showView(seasonPlayingPageV2);
             history.push("root.season_playing", { id: media_id });
-            return;
-          }
-          if (type === MediaTypes.Movie) {
-            // moviePlayingPageV2.query = {
-            //   id: media_id,
-            // };
-            // app.showView(moviePlayingPageV2);
-            history.push("root.movie_playing", { id: media_id });
             return;
           }
         },

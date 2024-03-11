@@ -1,15 +1,5 @@
 import { useState } from "react";
-import {
-  AlertTriangle,
-  Check,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  Loader,
-  Loader2,
-  Minus,
-  Plus,
-} from "lucide-react";
+import { AlertTriangle, Check, CheckCircle2, ChevronLeft, ChevronRight, Loader, Loader2 } from "lucide-react";
 
 import { ViewComponentProps } from "@/store/types";
 import { reportSomething, shareMediaToInvitee } from "@/services";
@@ -22,7 +12,6 @@ import { InviteeSelectCore } from "@/components/member-select/store";
 import { DynamicContentInListCore } from "@/domains/ui/dynamic-content";
 import { PlayerCore } from "@/domains/player";
 import { RefCore } from "@/domains/cur";
-import { MovieMediaCore } from "@/domains/media/movie";
 import { NovelReaderCore } from "@/domains/media/season";
 import { RequestCoreV2 } from "@/domains/request/v2";
 import { ReportTypes, SeasonReportList, MovieReportList } from "@/constants";
@@ -64,7 +53,7 @@ const menus = [
   },
 ];
 
-export const SeasonMediaSettings = (props: {
+export const MovieMediaSettings = (props: {
   store: NovelReaderCore;
   store2: PlayerCore;
   app: ViewComponentProps["app"];
@@ -195,21 +184,20 @@ ${url}`;
             });
             return;
           }
-          reportRequest.run({
-            type: ReportTypes.Season,
-            data: curReport.value,
-            media_id: store.profile.id,
-            media_source_id: store.curChapter?.id,
-          });
+          // reportRequest.run({
+          //   type: ReportTypes.Movie,
+          //   data: curReport.value,
+          //   media_id: store.profile.id,
+          //   media_source_id: store.curSource?.id,
+          // });
         },
       })
   );
 
   const [menuIndex, setMenuIndex] = useState<MediaSettingsMenuKey>(MediaSettingsMenuKey.Resolution);
   const [state, setState] = useState(store.state);
-  const [curSource, setCurSource] = useState(store.$source.profile);
+  const [curSource, setCurSource] = useState(store.state.curSource);
   const [playerState, setPlayerState] = useState(store2.state);
-  const [subtitle, setSubtitle] = useState(store.$source.subtitle);
   const [rate, setRate] = useState(store2._curRate);
   const [member, setMember] = useState(inviteeSelect.$list.response);
   const [shareLink, setShareLink] = useState<string | null>(null);
@@ -229,9 +217,6 @@ ${url}`;
     });
     store.onSourceFileChange((v) => {
       setCurSource(v);
-    });
-    store.$source.onSubtitleChange((v) => {
-      setSubtitle(v);
     });
     store2.onRateChange((v) => {
       setRate(v.rate);
@@ -258,68 +243,12 @@ ${url}`;
             <div
               className="flex items-center justify-between py-2 px-4"
               onClick={() => {
-                showMenuContent(MediaSettingsMenuKey.Resolution);
-              }}
-            >
-              <div>分辨率</div>
-              <div className="flex items-center text-w-fg-1">
-                <Show when={!!curSource?.typeText}>
-                  <div className="px-2">{curSource?.typeText}</div>
-                </Show>
-                <ChevronRight className="w-5 h-5" />
-              </div>
-            </div>
-            <div
-              className="flex items-center justify-between py-2 px-4"
-              onClick={() => {
                 showMenuContent(MediaSettingsMenuKey.SourceFile);
               }}
             >
               <div>视频源</div>
               <div className=" text-w-fg-1">
                 <ChevronRight className="w-5 h-5" />
-              </div>
-            </div>
-            <div
-              className="flex items-center justify-between py-2 px-4"
-              onClick={() => {
-                if (subtitle === null) {
-                  return;
-                }
-                showMenuContent(MediaSettingsMenuKey.Subtitle);
-              }}
-            >
-              <div>字幕列表</div>
-              <div className="flex items-center">
-                <div
-                  className="px-4"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    store2.toggleSubtitleVisible();
-                    store.$source.toggleSubtitleVisible();
-                  }}
-                >
-                  {(() => {
-                    if (subtitle === null) {
-                      return <span className="text-w-fg-2">暂无字幕</span>;
-                    }
-                    if (subtitle.visible) {
-                      return "禁用";
-                    }
-                    return "启用";
-                  })()}
-                </div>
-                <div
-                  className={cn(subtitle === null ? "text-w-fg-2" : "text-w-fg-1")}
-                  onClick={() => {
-                    if (subtitle === null) {
-                      return;
-                    }
-                    showMenuContent(MediaSettingsMenuKey.Subtitle);
-                  }}
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </div>
               </div>
             </div>
             <div
@@ -412,84 +341,6 @@ ${url}`;
           <div className="h-[1px] bg-w-bg-1" />
           <ScrollView className="absolute inset-0 top-16" store={scroll}>
             {(() => {
-              if (menuIndex === MediaSettingsMenuKey.Resolution) {
-                return (
-                  <div>
-                    {(() => {
-                      if (!curSource) {
-                        return <div>Loading</div>;
-                      }
-                      const { typeText: curTypeText, resolutions } = curSource;
-                      return (
-                        <div className="max-h-full text-w-fg-1 px-4 overflow-y-auto">
-                          <div className="pb-24">
-                            {resolutions.map((r, i) => {
-                              const { type, typeText } = r;
-                              return (
-                                <div
-                                  key={i}
-                                  className={cn(
-                                    "flex items-center justify-between p-4 rounded-md cursor-pointer",
-                                    curTypeText === typeText ? "bg-w-bg-active" : ""
-                                  )}
-                                  onClick={async () => {
-                                    sourceIcon.select(type);
-                                    sourceIcon.set(3);
-                                    const result = await store.changeResolution(type);
-                                    if (result.error) {
-                                      sourceIcon.set(5);
-                                      return;
-                                    }
-                                    sourceIcon.set(2);
-                                    sourceIcon.clear();
-                                    storage.merge("player_settings", {
-                                      type,
-                                    });
-                                  }}
-                                >
-                                  <div>{typeText}</div>
-                                  <DynamicContent
-                                    className="ml-4"
-                                    store={sourceIcon.bind(type)}
-                                    options={[
-                                      {
-                                        value: 1,
-                                        content: null,
-                                      },
-                                      {
-                                        value: 2,
-                                        content: (
-                                          <Show when={curTypeText === typeText}>
-                                            <div>
-                                              <CheckCircle2 className="w-6 h-6" />
-                                            </div>
-                                          </Show>
-                                        ),
-                                      },
-                                      {
-                                        value: 3,
-                                        content: <Loader className="w-6 h-6 animate animate-spin" />,
-                                      },
-                                      {
-                                        value: 4,
-                                        content: <Check className="w-6 h-6" />,
-                                      },
-                                      {
-                                        value: 5,
-                                        content: <AlertTriangle className="w-6 h-6" />,
-                                      },
-                                    ]}
-                                  />
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                );
-              }
               if (menuIndex === MediaSettingsMenuKey.SourceFile) {
                 return (
                   <div>
@@ -504,7 +355,7 @@ ${url}`;
                         <div className="max-h-full overflow-y-auto px-4 text-w-fg-1">
                           <div className="pb-24">
                             {state.curSource.files.map((s) => {
-                              const { id, name, invalid } = s;
+                              const { id, name } = s;
                               return (
                                 <div
                                   key={id}
@@ -515,13 +366,12 @@ ${url}`;
                                   onClick={async () => {
                                     fileIcon.select(id);
                                     fileIcon.set(3);
-                                    const result = await store.changeSourceFile(s);
+                                    const result = await store.changeSourceFile({ id, name });
                                     if (result.error) {
                                       sourceIcon.set(5);
                                       fileIcon.clear();
                                       return;
                                     }
-                                    fileIcon.set(2);
                                     fileIcon.clear();
                                   }}
                                 >
@@ -533,23 +383,6 @@ ${url}`;
                                       {
                                         value: 1,
                                         content: null,
-                                      },
-                                      {
-                                        value: 2,
-                                        content: (
-                                          <Show
-                                            when={invalid}
-                                            fallback={
-                                              <Show when={curSource?.id === id}>
-                                                <div>
-                                                  <CheckCircle2 className="w-6 h-6" />
-                                                </div>
-                                              </Show>
-                                            }
-                                          >
-                                            <AlertTriangle className="w-6 h-6" />
-                                          </Show>
-                                        ),
                                       },
                                       {
                                         value: 3,
@@ -636,71 +469,6 @@ ${url}`;
                   </div>
                 );
               }
-              if (menuIndex === MediaSettingsMenuKey.Subtitle) {
-                return (
-                  <div className="max-h-full overflow-y-auto px-4 text-w-fg-1">
-                    <div className="pb-24">
-                      {store.$source.subtitles.map((sub, i) => {
-                        return (
-                          <div
-                            key={i}
-                            className={cn(
-                              "flex items-center justify-between p-4 rounded-md cursor-pointer",
-                              sub.url === subtitle?.url ? "bg-w-bg-active" : ""
-                            )}
-                            onClick={async () => {
-                              subtitleIcon.select(sub.id);
-                              subtitleIcon.set(3);
-                              const r = await store.$source.loadSubtitleFile(sub, store.currentTime);
-                              if (r.error) {
-                                subtitleIcon.set(5);
-                                subtitleIcon.clear();
-                                return;
-                              }
-                              subtitleIcon.set(4);
-                              subtitleIcon.clear();
-                            }}
-                          >
-                            <div className="w-full break-all truncate">{sub.language.join("&")}</div>
-                            <DynamicContent
-                              className="ml-4"
-                              store={subtitleIcon.bind(sub.id)}
-                              options={[
-                                {
-                                  value: 1,
-                                  content: null,
-                                },
-                                {
-                                  value: 2,
-                                  content: (
-                                    <Show when={sub.url === subtitle?.url}>
-                                      <div>
-                                        <CheckCircle2 className="w-6 h-6" />
-                                      </div>
-                                    </Show>
-                                  ),
-                                },
-                                {
-                                  value: 3,
-                                  content: <Loader className="w-6 h-6 animate animate-spin" />,
-                                },
-                                {
-                                  value: 4,
-                                  content: <Check className="w-6 h-6" />,
-                                },
-                                {
-                                  value: 5,
-                                  content: <AlertTriangle className="w-6 h-6" />,
-                                },
-                              ]}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              }
               if (menuIndex === MediaSettingsMenuKey.Share) {
                 return (
                   <div className="max-h-full overflow-y-auto px-4 text-w-fg-1">
@@ -752,7 +520,7 @@ ${url}`;
                 return (
                   <div className="max-h-full overflow-y-auto px-4 text-w-fg-1">
                     <div className="pb-24">
-                      {SeasonReportList.map((question, i) => {
+                      {MovieReportList.map((question, i) => {
                         return (
                           <div
                             key={i}
@@ -809,7 +577,7 @@ ${url}`;
       </Dialog>
       <Dialog store={reportConfirmDialog}>
         <div className="text-w-fg-1">
-          <p>提交你发现的该电视剧的问题</p>
+          <p>提交你发现的问题</p>
           <p className="mt-2 text-xl">「{curReportValue}」</p>
         </div>
       </Dialog>

@@ -38,10 +38,6 @@ const configure = {
                   },
                 },
               },
-              home_index_movie: {
-                title: "电影",
-                pathname: "/home/index/movie",
-              },
               home_index_recommended: {
                 title: "推荐",
                 pathname: "/home/index/recommended",
@@ -57,19 +53,6 @@ const configure = {
       season_playing: {
         title: "播放电视剧",
         pathname: "/season_play",
-        options: {
-          keep_alive: true,
-          animation: {
-            in: "slide-in-from-right",
-            out: "slide-out-to-right",
-            show: "slide-in-from-right",
-            hide: "slide-out-to-right",
-          },
-        },
-      },
-      movie_playing: {
-        title: "播放电影",
-        pathname: "/movie_play",
         options: {
           keep_alive: true,
           animation: {

@@ -124,14 +124,6 @@ export const HomeRecommendedTabContent: ViewComponent = React.memo((props) => {
                                 history.push("root.season_playing", { id });
                                 return;
                               }
-                              if (type === MediaTypes.Movie) {
-                                // moviePlayingPageV2.query = {
-                                //   id,
-                                // };
-                                // app.showView(moviePlayingPageV2);
-                                history.push("root.movie_playing", { id });
-                                return;
-                              }
                               app.tip({
                                 text: ["数据异常"],
                               });

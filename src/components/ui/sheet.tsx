@@ -7,7 +7,7 @@ import * as DialogPrimitive from "@/packages/ui/dialog";
 import { cn } from "@/utils";
 import { Show } from "@/packages/ui/show";
 
-const sheetVariants = cva("fixed z-50 scale-100 gap-4 rounded-tl-xl rounded-tr-xl bg-w-bg-2 text-w-fg-0 opacity-100", {
+const sheetVariants = cva("fixed z-50 scale-100 gap-4 bg-w-bg-2 text-w-fg-0 opacity-100", {
   variants: {
     position: {
       top: "animate-in slide-in-from-top w-full duration-300 data-[state=closed]:animate-out data-[state=closed]:slide-out-to-top",
@@ -164,7 +164,7 @@ const Content = (
       <Overlay store={store} />
       <DialogPrimitive.Content store={store} className={cn(sheetVariants({ position, size }), className)}>
         <Show when={!hideTitle}>
-          <Header className="flex">
+          <Header className="flex absolute -top-14 w-full">
             <div
               className="p-4 self-end"
               onClick={() => {
@@ -182,7 +182,7 @@ const Content = (
 };
 
 const Header = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col space-y-2 text-center sm:text-left", className)} {...props} />
+  <div className={cn("flex flex-col h-14 rounded-tl-xl rounded-tr-xl bg-w-bg-2 border-b text-center sm:text-left", className)} {...props} />
 );
 
 const Footer = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

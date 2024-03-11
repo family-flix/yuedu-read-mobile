@@ -54,7 +54,7 @@ export const ListView = React.memo(
     });
 
     return (
-      <div className={cn("relative z-40 h-full text-w-fg-1", props.wrapClassName)}>
+      <div className={cn("relative z-40 text-w-fg-1", props.wrapClassName)}>
         <Show when={!!(response.initial && skeleton)}>
           <div className={props.className}>{skeleton}</div>
         </Show>

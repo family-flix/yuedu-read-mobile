@@ -31,6 +31,7 @@ enum Events {
   EpisodesChange,
   /** 切换视频文件 */
   SourceFileChange,
+  Loading,
   BeforeNextEpisode,
   BeforePrevEpisode,
   BeforeChangeSource,
@@ -42,13 +43,12 @@ type TheTypesOfEvents = {
     curSource: NonNullable<NovelChapter> & { currentTime: number };
   };
   [Events.SourceFileChange]: CurNovelChapter;
-  [Events.EpisodeChange]: NovelChapter & {
-    currentTime: number;
-  };
+  [Events.EpisodeChange]: CurNovelChapter;
   [Events.EpisodesChange]: NovelChapter[];
   [Events.BeforeNextEpisode]: void;
   [Events.BeforePrevEpisode]: void;
   [Events.BeforeChangeSource]: void;
+  [Events.Loading]: boolean;
   [Events.StateChange]: SeasonCoreState;
 };
 type SeasonCoreState = {
@@ -60,6 +60,7 @@ type SeasonCoreState = {
   };
   curSource: null | CurNovelChapter;
   chapters: NovelChapter[];
+  loading: boolean;
   // curGroup: null | SeasonEpisodeGroup;
 };
 type SeasonCoreProps = {
@@ -74,7 +75,10 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
     posterPath: string;
   } = null;
   // sourceGroups: SeasonEpisodeGroup[] = [];
-  chapters: NovelChapter[] = [];
+  chapters: (NovelChapter &
+    Partial<{
+      top: number;
+    }>)[] = [];
   /** 该电视剧名称、剧集等信息 */
   curChapter: null | CurNovelChapter = null;
   // curGroup: null | SeasonEpisodeGroup = null;
@@ -84,7 +88,7 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
   /** 正在播放中 */
   playing = false;
   /** 正在请求中（获取详情、视频源信息等） */
-  private _pending = false;
+  loading = false;
 
   $source: NovelChapterSourceFileCore;
   $chapters: ListCoreV2<
@@ -98,6 +102,7 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
       profile: this.profile,
       curSource: this.curChapter,
       chapters: this.chapters,
+      loading: this.loading,
     };
   }
 
@@ -113,6 +118,10 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
         client,
       })
     );
+    this.$chapters.onDataSourceChange((dataSource) => {
+      this.chapters = [...dataSource];
+      this.emit(Events.StateChange, { ...this.state });
+    });
     this.$source = new NovelChapterSourceFileCore({
       client,
     });
@@ -136,7 +145,13 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
     const { id, name, overview, chapterCount, coverPath: posterPath, curChapter, chapters, next_marker } = res.data;
     // console.log("[DOMAIN]media/season - fetchProfile result", curSource);
     this.chapters = chapters;
-    this.$chapters.setDataSource(chapters);
+    this.$chapters.modifyResponse((prev) => {
+      return {
+        ...prev,
+        dataSource: chapters,
+        initial: false,
+      };
+    });
     this.$chapters.setParams({
       novel_id,
       next_marker,
@@ -157,10 +172,10 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
   }
 
   /** 播放该电视剧下指定影片 */
-  async playEpisode(episode: NovelChapter, extra: { currentTime: number }) {
+  async fetchChapterContent(chapter: NovelChapter, extra: { currentTime: number }) {
     const { currentTime = 0 } = extra;
-    console.log("[DOMAIN]media/season - playEpisode", episode, this.curChapter);
-    const { id, files } = episode;
+    console.log("[DOMAIN]media/season - playEpisode", chapter, this.curChapter);
+    const { id, files } = chapter;
     if (this.curChapter && id === this.curChapter.id) {
       this.tip({
         text: ["已经是该剧集了"],
@@ -183,13 +198,14 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(tip);
     }
     this.currentTime = currentTime;
-    this.curChapter = { ...episode, progress: currentTime, curFile: r.data };
+    this.curChapter = { ...chapter, progress: currentTime, curFile: r.data };
+    this.emit(Events.EpisodeChange, { ...this.curChapter });
     this.emit(Events.StateChange, { ...this.state });
     return Result.Ok(this.curChapter);
   }
   /** 切换剧集 */
   switchEpisode(episode: NovelChapter) {
-    return this.playEpisode(episode, { currentTime: 0 });
+    return this.fetchChapterContent(episode, { currentTime: 0 });
   }
   /** 获取下一剧集 */
   async getNextEpisode() {
@@ -217,7 +233,6 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
       return Result.Err("已经是最后一章了3");
     }
     const { id, order, name, files } = r.data.dataSource[0];
-    this.chapters = this.chapters.concat(r.data.dataSource);
     const r2 = await this.$source.load(files[0]);
     if (r2.error) {
       return Result.Err(r2.error.message);
@@ -244,14 +259,16 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
   prepareNextEpisode() {}
   /** 播放下一集 */
   async playNextEpisode() {
-    if (this._pending) {
+    if (this.loading) {
       const msg = this.tip({ text: ["正在加载..."] });
       return Result.Err(msg);
     }
     this.emit(Events.BeforeNextEpisode);
-    this._pending = true;
+    this.loading = true;
+    this.emit(Events.Loading, true);
     const r = await this.getNextEpisode();
-    this._pending = false;
+    this.loading = false;
+    this.emit(Events.Loading, false);
     if (r.error) {
       const msg = this.tip({ text: [r.error.message] });
       return Result.Err(msg);
@@ -260,7 +277,7 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
     if (nextEpisode === null) {
       return Result.Err("没有找到可播放剧集");
     }
-    await this.playEpisode(nextEpisode, { currentTime: 0 });
+    await this.fetchChapterContent(nextEpisode, { currentTime: 0 });
     return Result.Ok(null);
   }
   async fetchEpisodeOfGroup(group: { start: number; end: number }) {
@@ -317,6 +334,16 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
     this.curChapter.curFile = r.data;
     // this.emit(Events.SourceFileChange, { ...res.data, progress: this.currentTime });
     return Result.Ok(null);
+  }
+  findChapter(id: string) {
+    return this.chapters.find((c) => c.id === id);
+  }
+  setChapterPosition(chapter: { id: string }, position: { top: number }) {
+    const matched = this.chapters.find((c) => c.id === chapter.id);
+    if (!matched) {
+      return;
+    }
+    matched.top = position.top;
   }
   setCurrentTime(currentTime: number) {
     this.currentTime = currentTime;
@@ -406,7 +433,10 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
   onProfileLoaded(handler: Handler<TheTypesOfEvents[Events.ProfileLoaded]>) {
     return this.on(Events.ProfileLoaded, handler);
   }
-  onEpisodeChange(handler: Handler<TheTypesOfEvents[Events.EpisodeChange]>) {
+  onLoading(handler: Handler<TheTypesOfEvents[Events.Loading]>) {
+    return this.on(Events.Loading, handler);
+  }
+  onCurChapterChange(handler: Handler<TheTypesOfEvents[Events.EpisodeChange]>) {
     return this.on(Events.EpisodeChange, handler);
   }
   onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {

@@ -70,12 +70,11 @@ class SeasonPlayingPageLogic<
       // if (episodeIndex !== -1) {
       //   episodeView.scrollTo({ left: episodeIndex * (EPISODE_CARD_WIDTH + 8) });
       // }
-      novel.playEpisode(curEpisode, { currentTime: curEpisode.currentTime ?? 0 });
+      novel.fetchChapterContent(curEpisode, { currentTime: curEpisode.currentTime ?? 0 });
       // bottomOperation.show();
     });
-    novel.onEpisodeChange((curEpisode) => {
+    novel.onCurChapterChange((curChapter) => {
       app.setTitle(novel.getTitle().join(" - "));
-      const { currentTime } = curEpisode;
     });
     novel.onTip((msg) => {
       app.tip(msg);
@@ -181,11 +180,34 @@ export const SeasonPlayingPageV2: ViewComponent = React.memo((props) => {
   const $page = useInstance(() => new SeasonPlayingPageView({ view }));
 
   const [state, setProfile] = useState($logic.$tv.state);
+  const [loading, setLoading] = useState($logic.$tv.loading);
 
   useInitialize(() => {
     $logic.$tv.onStateChange((v) => {
       setProfile(v);
     });
+    // $page.$episodes.onVisibleChange((open) => {
+    //   if (!open) {
+    //     return;
+    //   }
+    //   if (!$logic.$tv.curChapter) {
+    //     return;
+    //   }
+    //   const matched = $logic.$tv.findChapter($logic.$tv.curChapter.id);
+    //   if (!matched) {
+    //     return;
+    //   }
+    //   if (!matched.top) {
+    //     return;
+    //   }
+    //   $page.$episodeView.scrollTo({ top: matched.top });
+    // });
+    $page.$episodeView.onReachBottom(() => {
+      $logic.$tv.$chapters.loadMore();
+    });
+    // $logic.$tv.onLoading((v) => {
+    //   setLoading(v);
+    // });
     $logic.$tv.fetchProfile(view.query.id);
   });
 
@@ -204,7 +226,7 @@ export const SeasonPlayingPageV2: ViewComponent = React.memo((props) => {
       <ScrollView
         store={$page.$scroll}
         className="bg-w-bg-0"
-        contentClassName="pt-12 pb-24 space-y-2"
+        contentClassName="pb-12"
         onClick={() => {
           $page.prepareToggle();
         }}
@@ -214,13 +236,39 @@ export const SeasonPlayingPageV2: ViewComponent = React.memo((props) => {
             return null;
           }
           const lines = state.curSource.curFile.content;
-          return lines.map((line, i) => {
-            return (
-              <div key={i} className="px-4">
-                <div className="indent-4 text-lg">{line}</div>
+          return (
+            <>
+              <div className="px-4 mt-4 max-w-[248px] text-sm truncate break-all">{state.curSource?.name}</div>
+              <div className="mt-8 space-y-2">
+                {lines.map((line, i) => {
+                  return (
+                    <div key={i} className="px-4">
+                      <div className="indent-4 text-lg">{line}</div>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          });
+              <div
+                className="mt-8 text-center text-w-fg-1"
+                onClick={async (event) => {
+                  event.stopPropagation();
+                  setLoading(true);
+                  await $logic.$tv.playNextEpisode();
+                  setLoading(false);
+                  $logic.$tv.updatePlayProgressForce();
+                  $page.$scroll.scrollTo({ top: 0 });
+                }}
+              >
+                {loading ? (
+                  <div className="flex justify-center">
+                    <Loader className="w-6 h-6 animate animate-spin" />
+                  </div>
+                ) : (
+                  "下一章"
+                )}
+              </div>
+            </>
+          );
         })()}
         <div className="">
           <div
@@ -249,9 +297,9 @@ export const SeasonPlayingPageV2: ViewComponent = React.memo((props) => {
                 >
                   <ArrowLeft className="w-6 h-6" />
                 </div>
-                <Show when={!!state.curSource}>
+                {/* <Show when={!!state.curSource}>
                   <div className="max-w-[248px] truncate break-all">{state.curSource?.name}</div>
-                </Show>
+                </Show> */}
               </div>
             </Presence>
           </div>
@@ -331,18 +379,18 @@ export const SeasonPlayingPageV2: ViewComponent = React.memo((props) => {
           }
           return (
             <ScrollView store={$page.$episodeView} className="relative">
-              <ListView store={$logic.$tv.$chapters} className="px-4 space-y-2 pb-24" wrapClassName="h-full">
+              <ListView store={$logic.$tv.$chapters} className="px-2 pt-4 space-y-2" wrapClassName="h-full">
                 {state.chapters.map((chapter) => {
-                  const { id, name, order } = chapter;
+                  const { id, name, order, files } = chapter;
                   return (
                     <div
                       key={id}
-                      className={cn("relative flex items-center px-2", {})}
+                      className={cn("__a relative flex items-center px-2", {})}
                       onClick={async () => {
                         // 这种情况是缺少了该集，但仍返回了 order 用于提示用户「这里本该有一集，但缺少了」
-                        if (!id) {
+                        if (files.length === 0) {
                           app.tip({
-                            text: ["该集无法播放，请反馈后等待处理"],
+                            text: ["该章节没有正文，请反馈后等待处理"],
                           });
                           return;
                         }
@@ -354,41 +402,48 @@ export const SeasonPlayingPageV2: ViewComponent = React.memo((props) => {
                         $page.$episode.set(1);
                         $page.$episode.clear();
                       }}
+                      onAnimationEnd={(event) => {
+                        event.stopPropagation();
+                        const { offsetTop } = event.currentTarget;
+                        // const { top } = event.currentTarget.getBoundingClientRect();
+                        if (id === $logic.$tv.curChapter?.id) {
+                          $page.$episodeView.scrollTo({ top: offsetTop - 48 });
+                        }
+                        // console.log("setChapterPosition", name);
+                        $logic.$tv.setChapterPosition(chapter, { top: offsetTop });
+                      }}
                     >
-                      {!id ? (
-                        <div className="opacity-20">{order}</div>
-                      ) : (
-                        <DynamicContent
-                          store={$page.$episode.bind(id)}
-                          options={[
-                            {
-                              value: 1,
-                              content: (
-                                <Show
-                                  when={state.curSource?.id === id}
-                                  fallback={
-                                    <div className="flex items-center">
-                                      <div className="">{name}</div>
-                                    </div>
-                                  }
-                                >
+                      <DynamicContent
+                        store={$page.$episode.bind(id)}
+                        options={[
+                          {
+                            value: 1,
+                            content: (
+                              <Show
+                                when={state.curSource?.id === id}
+                                fallback={
                                   <div className="flex items-center">
-                                    <div className="text-w-brand">{name}</div>
+                                    <div className={cn(files.length === 0 ? "opacity-20" : "")}>{name}</div>
                                   </div>
-                                </Show>
-                              ),
-                            },
-                            {
-                              value: 2,
-                              content: (
-                                <div>
-                                  <Loader className="w-5 h-5 animate animate-spin" />
+                                }
+                              >
+                                <div className="flex items-center">
+                                  <div className="text-w-brand">{name}</div>
                                 </div>
-                              ),
-                            },
-                          ]}
-                        />
-                      )}
+                              </Show>
+                            ),
+                          },
+                          {
+                            value: 2,
+                            content: (
+                              <div className="flex items-center">
+                                <Loader className="w-5 h-5 animate animate-spin" />
+                                <div className="">{name}</div>
+                              </div>
+                            ),
+                          },
+                        ]}
+                      />
                     </div>
                   );
                 })}

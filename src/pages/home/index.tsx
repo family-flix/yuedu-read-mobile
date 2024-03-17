@@ -7,6 +7,7 @@ import { ArrowUp, Bell, Bird, Search, User } from "lucide-react";
 import { messageList } from "@/store/index";
 import { ViewComponentWithMenu } from "@/store/types";
 import { PageKeys } from "@/store/routes";
+import { fetchNovelsInShelf, fetchNovelsInShelfProcess } from "@/services/media";
 import {
   fetchCollectionList,
   fetchCollectionListProcess,
@@ -20,12 +21,14 @@ import { MediaRequestCore } from "@/components/media-request";
 import { Show } from "@/components/ui/show";
 import { TabHeader } from "@/components/ui/tab-header";
 import { TabHeaderCore } from "@/domains/ui/tab-header";
-import { ScrollViewCore, InputCore, ButtonCore, DialogCore } from "@/domains/ui";
+import { ScrollViewCore, InputCore, ButtonCore, DialogCore, ImageInListCore } from "@/domains/ui";
 import { fetchPlayingHistories } from "@/domains/media/services";
 import { AffixCore } from "@/domains/ui/affix";
 import { RequestCoreV2 } from "@/domains/request/v2";
 import { ListCoreV2 } from "@/domains/list/v2";
 import { useInitialize, useInstance } from "@/hooks";
+import { Button, LazyImage, ListView, ScrollView, Skeleton } from "@/components/ui";
+import { MediaTypes } from "@/constants";
 import { cn } from "@/utils";
 import { MediaOriginCountry } from "@/constants";
 
@@ -224,8 +227,34 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
       })
   );
 
+  const list = useInstance(
+    () =>
+      new ListCoreV2(
+        new RequestCoreV2({
+          fetch: fetchNovelsInShelf,
+          process: fetchNovelsInShelfProcess,
+          client,
+        }),
+        {
+          pageSize: 20,
+          search: {
+            type: MediaTypes.Season,
+          },
+        }
+      )
+  );
+  const scroll = new ScrollViewCore({
+    _name: "inner",
+    onReachBottom() {
+      list.loadMore();
+    },
+  });
+  const image = useInstance(() => new ImageInListCore());
+
   const [subViews, setSubViews] = useState(view.subViews);
   const [messageResponse, setMessageResponse] = useState(messageList.response);
+  const [response, setResponse] = useState(list.response);
+  const { dataSource } = response;
   // const [updatedMediaListState, setUpdatedMediaListState] = useState(updatedMediaList.response);
   // const [historyState, setHistoryState] = useState(historyList.response);
   const [height, setHeight] = useState(affix.height);
@@ -280,6 +309,10 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
     messageList.onStateChange((nextState) => {
       setMessageResponse(nextState);
     });
+    list.onStateChange((v) => {
+      setResponse(v);
+    });
+    list.init({ language: view.query.language });
     // collectionList.onStateChange((nextResponse) => {
     //   setResponse(nextResponse);
     // });
@@ -350,34 +383,91 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
               </div>
             </div>
           </div>
-          <TabHeader store={tab} />
         </Affix>
         <div className="absolute inset-0 flex flex-col" style={{ top: height }}>
-          <div className="relative flex-1">
-            {subViews.map((subView, i) => {
-              const routeName = subView.name;
-              const PageContent = pages[routeName as Exclude<PageKeys, "root">];
-              return (
-                <KeepAliveRouteView key={subView.id} className="absolute inset-0" store={subView} index={i}>
-                  <div
-                    className={cn(
-                      "w-full h-full scrollbar-hide overflow-y-auto opacity-100 scroll scroll--hidden",
-                      app.env.android ? "scroll--fix" : ""
-                    )}
-                  >
-                    <PageContent
-                      app={app}
-                      history={history}
-                      storage={storage}
-                      client={client}
-                      pages={pages}
-                      view={subView}
-                    />
+          <ScrollView store={scroll}>
+            <ListView
+              store={list}
+              className="relative grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 pt-4"
+              skeleton={
+                <>
+                  <div className="flex px-3 pb-3 cursor-pointer">
+                    <div className="relative w-[128px] h-[198px] mr-4">
+                      <Skeleton className="w-full h-full" />
+                    </div>
+                    <div className="mt-2 flex-1 max-w-full overflow-hidden text-ellipsis">
+                      <Skeleton className="w-full h-[32px]"></Skeleton>
+                      <Skeleton className="mt-1 w-24 h-[24px]"></Skeleton>
+                      <Skeleton className="mt-2 w-32 h-[22px]"></Skeleton>
+                    </div>
                   </div>
-                </KeepAliveRouteView>
-              );
-            })}
-          </div>
+                  <div className="flex px-3 pb-3 cursor-pointer">
+                    <div className="relative w-[128px] h-[198px] mr-4">
+                      <Skeleton className="w-full h-full" />
+                    </div>
+                    <div className="mt-2 flex-1 max-w-full overflow-hidden text-ellipsis">
+                      <Skeleton className="w-full h-[32px]"></Skeleton>
+                      <Skeleton className="mt-1 w-24 h-[24px]"></Skeleton>
+                      <Skeleton className="mt-2 w-32 h-[22px]"></Skeleton>
+                    </div>
+                  </div>
+                </>
+              }
+              extraEmpty={
+                <div className="mt-2">
+                  <Button store={mediaRequestBtn} variant="subtle">
+                    提交想看的小说
+                  </Button>
+                </div>
+              }
+            >
+              {(() => {
+                return dataSource.map((season) => {
+                  const { id, name, cover_path, author, latest_chapter, cur_chapter } = season;
+                  return (
+                    <div
+                      key={id}
+                      className="flex px-3 pb-3 cursor-pointer"
+                      onClick={() => {
+                        history.push("root.season_playing", { id });
+                      }}
+                    >
+                      <div className="relative w-[86px] mr-4 rounded-lg overflow-hidden">
+                        <LazyImage className="w-full h-full object-cover" store={image.bind(cover_path)} alt={name} />
+                      </div>
+                      <div className="flex-1 max-w-full overflow-hidden">
+                        <div className="flex items-center">
+                          <h2 className="text-xl text-w-fg-0">{name}</h2>
+                        </div>
+                        {author ? (
+                          <div className="mt-1 text-sm overflow-hidden text-ellipsis break-keep whitespace-nowrap">
+                            {author.name}
+                          </div>
+                        ) : null}
+                        {cur_chapter ? (
+                          <div
+                            className="flex items-center mt-4 text-sm whitespace-nowrap"
+                            style={{ fontSize: 12, lineHeight: "12px" }}
+                          >
+                            <div>{cur_chapter.updated_at}</div>
+                            <p className="mx-2 ">读到</p>
+                            <div>{cur_chapter.name}</div>
+                          </div>
+                        ) : null}
+                        <div
+                          className="flex items-center mt-2 text-sm whitespace-nowrap"
+                          style={{ fontSize: 12, lineHeight: "12px" }}
+                        >
+                          <p className="mr-2">最新</p>
+                          <div>{latest_chapter.name}</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </ListView>
+          </ScrollView>
         </div>
       </div>
     </>

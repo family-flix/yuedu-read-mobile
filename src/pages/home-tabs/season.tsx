@@ -98,7 +98,7 @@ export const HomeSeasonTabContent: ViewComponent = React.memo((props) => {
         >
           {(() => {
             return dataSource.map((season) => {
-              const { id, name, cover_path, author } = season;
+              const { id, name, cover_path, author, latest_chapter, cur_chapter } = season;
               return (
                 <div
                   key={id}
@@ -107,26 +107,35 @@ export const HomeSeasonTabContent: ViewComponent = React.memo((props) => {
                     history.push("root.season_playing", { id });
                   }}
                 >
-                  <div className="relative w-[128px] h-[198px] mr-4 rounded-lg overflow-hidden">
+                  <div className="relative w-[86px] mr-4 rounded-lg overflow-hidden">
                     <LazyImage className="w-full h-full object-cover" store={image.bind(cover_path)} alt={name} />
                   </div>
-                  <div className="mt-2 flex-1 max-w-full overflow-hidden">
+                  <div className="flex-1 max-w-full overflow-hidden">
                     <div className="flex items-center">
                       <h2 className="text-xl text-w-fg-0">{name}</h2>
                     </div>
-                    {/* <div className="flex items-center mt-1">
-                      <div>{air_date}</div>
-                      <p className="mx-2 ">·</p>
-                      <div className="relative flex items-center">
-                        <Star className="absolute top-[50%] w-4 h-4 transform translate-y-[-50%]" />
-                        <div className="pl-4">{vote}</div>
-                      </div>
-                    </div> */}
                     {author ? (
                       <div className="mt-1 text-sm overflow-hidden text-ellipsis break-keep whitespace-nowrap">
                         {author.name}
                       </div>
                     ) : null}
+                    {cur_chapter ? (
+                      <div
+                        className="flex items-center mt-4 text-sm whitespace-nowrap"
+                        style={{ fontSize: 12, lineHeight: "12px" }}
+                      >
+                        <div>{cur_chapter.updated_at}</div>
+                        <p className="mx-2 ">读到</p>
+                        <div>{cur_chapter.name}</div>
+                      </div>
+                    ) : null}
+                    <div
+                      className="flex items-center mt-2 text-sm whitespace-nowrap"
+                      style={{ fontSize: 12, lineHeight: "12px" }}
+                    >
+                      <p className="mr-2">最新</p>
+                      <div>{latest_chapter.name}</div>
+                    </div>
                   </div>
                 </div>
               );

@@ -227,7 +227,7 @@ export type NovelChapter = {
 };
 export type CurNovelChapter = NovelChapter & {
   progress: number;
-  curFile: {
+  curFile: null | {
     id: string;
     name: string;
     content: string[];

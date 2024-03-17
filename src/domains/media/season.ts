@@ -183,10 +183,10 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
       return Result.Ok(this.curChapter);
     }
     if (files.length === 0) {
-      const tip = this.tip({
-        text: ["该剧集缺少视频源"],
-      });
-      return Result.Err(tip);
+      this.curChapter = { ...chapter, progress: currentTime, curFile: null };
+      this.emit(Events.EpisodeChange, { ...this.curChapter });
+      this.emit(Events.StateChange, { ...this.state });
+      return Result.Ok(this.curChapter);
     }
     const file = files[0];
     // console.log("[DOMAIN]media/season - playEpisode before this.$source.load", episode);
@@ -382,6 +382,9 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
       return;
     }
     if (this.curChapter === null) {
+      return;
+    }
+    if (this.curChapter.curFile === null) {
       return;
     }
     const request = new RequestCoreV2({

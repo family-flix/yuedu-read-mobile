@@ -9,7 +9,8 @@ import {
   SeasonMediaOriginCountryTexts,
 } from "@/constants";
 import { FetchParams } from "@/domains/list/typing";
-import { ListResponseWithCursor, RequestedResource, Result } from "@/types";
+import { ListResponse, ListResponseWithCursor, RequestedResource, Result } from "@/types";
+import { relative_time_from_now } from "@/utils";
 
 /**
  * 获取我的书架
@@ -17,11 +18,15 @@ import { ListResponseWithCursor, RequestedResource, Result } from "@/types";
 export function fetchNovelsInShelf(params: FetchParams & { keyword: string }) {
   const { page, pageSize, ...rest } = params;
   return request.post<
-    ListResponseWithCursor<{
+    ListResponse<{
       id: string;
       name: string;
       overview: string;
       cover_path: string;
+      latest_chapter_name: string;
+      latest_chapter_created: string;
+      cur_chapter_name: string | null;
+      updated: string | null;
       author: {
         id: string;
         name: string;
@@ -42,12 +47,33 @@ export function fetchNovelsInShelfProcess(
   return Result.Ok({
     ...r.data,
     list: r.data.list.map((novel_profile) => {
-      const { id, name, overview, cover_path, author } = novel_profile;
+      const {
+        id,
+        name,
+        overview,
+        cover_path,
+        author,
+        latest_chapter_created,
+        latest_chapter_name,
+        cur_chapter_name,
+        updated,
+      } = novel_profile;
       return {
         id,
         name,
         overview,
         cover_path,
+        cur_chapter:
+          updated && cur_chapter_name
+            ? {
+                name: cur_chapter_name,
+                updated_at: `${relative_time_from_now(updated)}`,
+              }
+            : null,
+        latest_chapter: {
+          name: latest_chapter_name,
+          created_at: relative_time_from_now(latest_chapter_created),
+        },
         author,
       };
     }),

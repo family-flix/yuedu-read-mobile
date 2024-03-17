@@ -235,6 +235,16 @@ export const SeasonPlayingPageV2: ViewComponent = React.memo((props) => {
           if (!state.curSource) {
             return null;
           }
+          if (!state.curSource.curFile) {
+            return (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <div>该章节没有索引到正文</div>
+                  <div>请反馈后等待处理</div>
+                </div>
+              </div>
+            );
+          }
           const lines = state.curSource.curFile.content;
           return (
             <>

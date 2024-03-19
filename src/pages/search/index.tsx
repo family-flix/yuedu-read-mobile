@@ -149,7 +149,9 @@ export const MediaSearchPage: ViewComponent = React.memo((props) => {
             });
             return;
           }
+          addToShelfBtn.setLoading(true);
           const r = await addToShelfRequest.run(record);
+          addToShelfBtn.setLoading(false);
           if (r.error) {
             app.tip({
               text: ["添加失败", r.error.message],
@@ -316,7 +318,7 @@ export const MediaSearchPage: ViewComponent = React.memo((props) => {
                             {author.name}
                           </div>
                         ) : null}
-                        <div className="inline-block mt-4">
+                        <div className="inline-block p-1 mt-4">
                           <Button variant="subtle" store={addToShelfBtn.bind(novel_profile)}>
                             加到书架
                           </Button>

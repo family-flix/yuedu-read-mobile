@@ -182,7 +182,7 @@ const Content = (
 };
 
 const Header = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col h-14 rounded-tl-xl rounded-tr-xl bg-w-bg-2 border-b text-center sm:text-left", className)} {...props} />
+  <div className={cn("flex flex-col h-14 rounded-tl-xl rounded-tr-xl bg-w-bg-2 border-b border-w-bg-3 text-center sm:text-left", className)} {...props} />
 );
 
 const Footer = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

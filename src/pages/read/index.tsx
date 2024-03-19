@@ -249,12 +249,12 @@ export const SeasonPlayingPageV2: ViewComponent = React.memo((props) => {
           return (
             <>
               <div className="px-4 mt-4 max-w-[248px] text-sm truncate break-all">{state.curSource?.name}</div>
-              <div className="mt-8 space-y-2">
+              <div className="mt-8 space-y-4">
                 {lines.map((line, i) => {
                   return (
-                    <div key={i} className="px-4">
-                      <div className="indent-4 text-lg">{line}</div>
-                    </div>
+                    <p key={i} className="px-4 indent-8 text-w-fg-1" style={{ fontSize: 20 }}>
+                      <span className="">{line}</span>
+                    </p>
                   );
                 })}
               </div>
@@ -314,14 +314,14 @@ export const SeasonPlayingPageV2: ViewComponent = React.memo((props) => {
             </Presence>
           </div>
           <div
-            className="fixed bottom-0 z-40 w-full safe-bottom"
+            className="fixed bottom-0 border-t border-w-bg-3 z-40 w-full bg-w-bg-0 safe-bottom"
             onClick={(e) => {
               e.stopPropagation();
             }}
           >
             <Presence
               className={cn(
-                "animate-in fade-in slide-in-from-bottom bg-w-bg-0",
+                "animate-in fade-in slide-in-from-bottom",
                 "data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=closed]:fade-out"
               )}
               store={$page.$bottom}

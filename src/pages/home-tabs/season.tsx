@@ -134,7 +134,6 @@ export const HomeSeasonTabContent: ViewComponent = React.memo((props) => {
                       style={{ fontSize: 12, lineHeight: "12px" }}
                     >
                       <p className="mr-2">最新</p>
-                      <div>{latest_chapter.name}</div>
                     </div>
                   </div>
                 </div>

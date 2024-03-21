@@ -166,6 +166,7 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
       overview,
       posterPath,
     };
+    this.currentTime = curChapter.currentTime;
     this.emit(Events.ProfileLoaded, { profile: this.profile, curSource: curChapter });
     this.emit(Events.StateChange, { ...this.state });
     return Result.Ok({ ...this.state });
@@ -400,7 +401,7 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
     });
   }
   /** 更新观看进度 */
-  updatePlayProgress = throttle_1(10 * 1000, (values: Partial<{ currentTime: number; duration: number }> = {}) => {
+  updatePlayProgress = debounce(1000, (values: Partial<{ currentTime: number; duration: number }> = {}) => {
     this.updatePlayProgressForce(values);
   });
   /** 当前进度改变 */
@@ -456,14 +457,13 @@ export class NovelReaderCore extends BaseDomain<TheTypesOfEvents> {
   }
 }
 
-function throttle_1(delay: number, fn: Function) {
+function throttle_1<T extends (...args: any[]) => any>(delay: number, fn: T) {
   let canInvoke = true;
 
   setInterval(() => {
     canInvoke = true;
   }, delay);
-
-  return (...args: unknown[]) => {
+  return (...args: Parameters<T>) => {
     if (canInvoke === false) {
       return;
     }

@@ -2,7 +2,7 @@
  * @file 首页
  */
 import React, { useState } from "react";
-import { ArrowUp, Bell, Bird, Search, User } from "lucide-react";
+import { AlertTriangle, ArrowUp, Bell, Bird, Search, User } from "lucide-react";
 
 import { messageList } from "@/store/index";
 import { ViewComponentWithMenu } from "@/store/types";
@@ -223,7 +223,7 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
     () =>
       new AffixCore({
         top: 0,
-        defaultHeight: 96,
+        defaultHeight: 56,
       })
   );
 
@@ -392,7 +392,7 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
               skeleton={
                 <>
                   <div className="flex px-3 pb-3 cursor-pointer">
-                    <div className="relative w-[128px] h-[198px] mr-4">
+                    <div className="relative w-[86px] h-[115px] mr-4">
                       <Skeleton className="w-full h-full" />
                     </div>
                     <div className="mt-2 flex-1 max-w-full overflow-hidden text-ellipsis">
@@ -402,7 +402,7 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
                     </div>
                   </div>
                   <div className="flex px-3 pb-3 cursor-pointer">
-                    <div className="relative w-[128px] h-[198px] mr-4">
+                    <div className="relative w-[86px] h-[115px] mr-4">
                       <Skeleton className="w-full h-full" />
                     </div>
                     <div className="mt-2 flex-1 max-w-full overflow-hidden text-ellipsis">
@@ -432,7 +432,7 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
                         history.push("root.season_playing", { id });
                       }}
                     >
-                      <div className="relative w-[86px] mr-4 rounded-lg overflow-hidden">
+                      <div className="relative w-[86px] h-[115px] mr-4 rounded-lg overflow-hidden">
                         <LazyImage className="w-full h-full object-cover" store={image.bind(cover_path)} alt={name} />
                       </div>
                       <div className="flex-1 max-w-full overflow-hidden">
@@ -449,18 +449,29 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
                             className="flex items-center mt-4 text-sm whitespace-nowrap"
                             style={{ fontSize: 12, lineHeight: "12px" }}
                           >
-                            <div>{cur_chapter.updated_at}</div>
-                            <p className="mx-2 ">读到</p>
+                            <p className="mr-2">读到</p>
                             <div>{cur_chapter.name}</div>
                           </div>
                         ) : null}
-                        <div
-                          className="flex items-center mt-2 text-sm whitespace-nowrap"
-                          style={{ fontSize: 12, lineHeight: "12px" }}
-                        >
-                          <p className="mr-2">最新</p>
-                          <div>{latest_chapter.name}</div>
-                        </div>
+                        {latest_chapter ? (
+                          <div
+                            className="flex items-center mt-2 text-sm whitespace-nowrap"
+                            style={{ fontSize: 12, lineHeight: "12px" }}
+                          >
+                            <p className="mr-2">最新</p>
+                            <div>{latest_chapter.name}</div>
+                          </div>
+                        ) : (
+                          <div
+                            className="flex items-center mt-2 text-sm whitespace-nowrap"
+                            style={{ fontSize: 12, lineHeight: "12px" }}
+                          >
+                            <div className="mr-2">
+                              <AlertTriangle className="w-3 h-3" />
+                            </div>
+                            <div>暂无章节内容</div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

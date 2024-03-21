@@ -16,11 +16,13 @@ enum Events {
   // CancelPullToRefresh,
   PullToBack,
   Refreshing,
+  Mounted,
   StateChange,
 }
 type TheTypesOfEvents = {
   [Events.ReachBottom]: void;
   [Events.Scroll]: { scrollTop: number };
+  [Events.Mounted]: void;
   [Events.PullToRefresh]: void;
   [Events.DisableScroll]: void;
   [Events.EnableScroll]: void;
@@ -105,6 +107,7 @@ export class ScrollViewCore extends BaseDomain<TheTypesOfEvents> {
   };
   /** 滚动到底部的阈值 */
   threshold = 120;
+  connected = false;
   private _pullToRefresh = false;
 
   state: ScrollViewState = {
@@ -145,6 +148,9 @@ export class ScrollViewCore extends BaseDomain<TheTypesOfEvents> {
     }
   }
 
+  setReady() {
+    this.emit(Events.Mounted);
+  }
   setRect(rect: Partial<{ width: number; height: number; contentHeight: number }>) {
     this.rect = {
       ...this.rect,
@@ -379,8 +385,11 @@ export class ScrollViewCore extends BaseDomain<TheTypesOfEvents> {
     this.state.step = this.pullToRefresh.state;
     this.emit(Events.StateChange, { ...this.state });
   }
+  refreshRect() {
+    console.log("请在 connect 中实现 refreshRect 方法");
+  }
   scrollTo(position: Partial<{ left: number; top: number }>) {
-    console.log("请在 connect 中实现该方法");
+    console.log("请在 connect 中实现 scrollTo 方法");
   }
 
   /** 页面滚动时调用 */
@@ -407,6 +416,9 @@ export class ScrollViewCore extends BaseDomain<TheTypesOfEvents> {
   }
   onReachBottom(handler: Handler<TheTypesOfEvents[Events.ReachBottom]>) {
     return this.on(Events.ReachBottom, handler);
+  }
+  onMounted(handler: Handler<TheTypesOfEvents[Events.Mounted]>) {
+    return this.on(Events.Mounted, handler);
   }
   onPullToRefresh(handler: Handler<TheTypesOfEvents[Events.PullToRefresh]>) {
     this.state.pullToRefresh = true;

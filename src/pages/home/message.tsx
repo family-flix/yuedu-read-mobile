@@ -11,14 +11,11 @@ import { ScrollView, Skeleton, LazyImage, ListView } from "@/components/ui";
 import { Show } from "@/components/ui/show";
 import { DynamicContent } from "@/components/dynamic-content";
 import { DynamicContentCore } from "@/domains/ui/dynamic-content";
-import { StepSwitch } from "@/components/ui/step";
-import { StepCore } from "@/domains/step";
-import { ScrollViewCore, ButtonCore, ImageInListCore } from "@/domains/ui";
-import { RequestCore } from "@/domains/request";
-import { useInitialize, useInstance } from "@/hooks";
-import { ViewComponent } from "@/store/types";
-import { MediaTypes } from "@/constants";
 import { RequestCoreV2 } from "@/domains/request/v2";
+import { ScrollViewCore, ButtonCore, ImageInListCore } from "@/domains/ui/index";
+import { useInitialize, useInstance } from "@/hooks/index";
+import { ViewComponent } from "@/store/types";
+import { MediaTypes } from "@/constants/index";
 
 enum MessageStatus {
   Normal = 1,

@@ -1,28 +1,26 @@
 /**
  * @file 电视剧播放页面
  */
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Layers, Loader, Settings, SkipForward } from "lucide-react";
 
 import { GlobalStorageValues, ViewComponent } from "@/store/types";
 import { Show } from "@/packages/ui/show";
-import { Sheet, ScrollView, Video, ListView } from "@/components/ui";
+import { Sheet, ScrollView, ListView } from "@/components/ui/index";
 import { Presence } from "@/components/ui/presence";
-import { PlayingIcon } from "@/components/playing";
 import { DynamicContent } from "@/components/dynamic-content";
-import { ScrollViewCore, DialogCore, PresenceCore } from "@/domains/ui";
+import { ScrollViewCore, DialogCore, PresenceCore } from "@/domains/ui/index";
 import { NovelReaderCore } from "@/domains/media/season";
 import { MediaResolutionTypes } from "@/domains/source/constants";
 import { RefCore } from "@/domains/cur";
-import { PlayerCore } from "@/domains/player";
-import { createVVTSubtitle } from "@/domains/subtitle/utils";
-import { Application, OrientationTypes } from "@/domains/app";
+import { Application } from "@/domains/app";
 import { RouteViewCore } from "@/domains/route_view";
 import { DynamicContentCore, DynamicContentInListCore } from "@/domains/ui/dynamic-content";
 import { StorageCore } from "@/domains/storage";
 import { HttpClientCore } from "@/domains/http_client";
-import { useInitialize, useInstance } from "@/hooks";
-import { cn, seconds_to_hour } from "@/utils";
+import { useInitialize, useInstance } from "@/hooks/index";
+import { cn } from "@/utils/index";
+import { MovieMediaSettings } from "@/components/season-media-settings";
 
 class SeasonPlayingPageLogic<
   P extends { app: Application; client: HttpClientCore; storage: StorageCore<GlobalStorageValues> }
@@ -86,7 +84,9 @@ class SeasonPlayingPageLogic<
 }
 class SeasonPlayingPageView {
   $view: RouteViewCore;
-  $scroll = new ScrollViewCore({});
+  $scroll = new ScrollViewCore({
+    _name: "reading-page",
+  });
 
   $mask = new PresenceCore({ mounted: true, open: true });
   $top = new PresenceCore({ mounted: true, open: true });
@@ -186,40 +186,15 @@ export const SeasonPlayingPageV2: ViewComponent = React.memo((props) => {
     $logic.$tv.onStateChange((v) => {
       setProfile(v);
     });
-    // $page.$episodes.onVisibleChange((open) => {
-    //   if (!open) {
-    //     return;
-    //   }
-    //   if (!$logic.$tv.curChapter) {
-    //     return;
-    //   }
-    //   const matched = $logic.$tv.findChapter($logic.$tv.curChapter.id);
-    //   if (!matched) {
-    //     return;
-    //   }
-    //   if (!matched.top) {
-    //     return;
-    //   }
-    //   $page.$episodeView.scrollTo({ top: matched.top });
-    // });
     $page.$episodeView.onReachBottom(() => {
       $logic.$tv.$chapters.loadMore();
     });
-    // $logic.$tv.onLoading((v) => {
-    //   setLoading(v);
-    // });
+    $page.$scroll.onScroll((pos) => {
+      const { scrollTop } = pos;
+      $logic.$tv.handleCurTimeChange({ currentTime: scrollTop, duration: $page.$scroll.rect.contentHeight || 0 });
+    });
     $logic.$tv.fetchProfile(view.query.id);
   });
-
-  // console.log("[PAGE]TVPlayingPage - render", tvId);
-
-  // if (error) {
-  //   return (
-  //     <div className="w-full h-[100vh]">
-  //       <div className="center text-center">{error}</div>
-  //     </div>
-  //   );
-  // }
 
   return (
     <>
@@ -248,11 +223,19 @@ export const SeasonPlayingPageV2: ViewComponent = React.memo((props) => {
           const lines = state.curSource.curFile.content;
           return (
             <>
-              <div className="px-4 mt-4 max-w-[248px] text-sm truncate break-all">{state.curSource?.name}</div>
-              <div className="mt-8 space-y-4">
+              <div className="px-4 mt-4 text-sm truncate text-w-fg-1 break-all">{state.curSource?.name}</div>
+              <div
+                className="__a mt-8 space-y-4"
+                onAnimationEnd={() => {
+                  $page.$scroll.refreshRect();
+                  if ($logic.$tv.curChapter) {
+                    $page.$scroll.scrollTo({ top: $logic.$tv.curChapter.progress });
+                  }
+                }}
+              >
                 {lines.map((line, i) => {
                   return (
-                    <p key={i} className="px-4 indent-8 text-w-fg-1" style={{ fontSize: 20 }}>
+                    <p key={i} className="px-4 indent-10 text-w-fg-1" style={{ fontSize: 20 }}>
                       <span className="">{line}</span>
                     </p>
                   );
@@ -461,6 +444,9 @@ export const SeasonPlayingPageV2: ViewComponent = React.memo((props) => {
             </ScrollView>
           );
         })()}
+      </Sheet>
+      <Sheet hideTitle store={$page.$settings}>
+        <MovieMediaSettings store={$logic.$tv} app={app} client={client} storage={storage} history={history} />
       </Sheet>
     </>
   );

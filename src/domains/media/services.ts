@@ -135,6 +135,10 @@ type NovelChapterResp = {
   files: {
     id: string;
     name: string;
+    from_source: {
+      id: string;
+      name: string;
+    };
     // content: string;
   }[];
 };
@@ -144,7 +148,7 @@ type NovelAndCurChapterResp = {
   overview: string;
   cover_path: string;
   cur_chapter: NovelChapterResp & { progress: number };
-  // source_count: number;
+  progress: number;
   chapters: NovelChapterResp[];
   next_marker: string;
 };
@@ -161,7 +165,7 @@ export function fetchMediaPlayingEpisodeProcess(r: TmpRequestResp<typeof fetchMe
   if (r.error) {
     return Result.Err(r.error);
   }
-  const { id, name, overview, cover_path, cur_chapter, chapters, next_marker } = r.data;
+  const { id, name, overview, cover_path, cur_chapter, progress, chapters, next_marker } = r.data;
   const processedChapters = chapters.map((chapter) => {
     const { id, name, order, files } = chapter;
     return {
@@ -169,10 +173,11 @@ export function fetchMediaPlayingEpisodeProcess(r: TmpRequestResp<typeof fetchMe
       name,
       order,
       files: files.map((file) => {
-        const { id, name } = file;
+        const { id, name, from_source } = file;
         return {
           id,
           name,
+          source_name: from_source.name,
           // content: content.split("\n"),
         };
       }),
@@ -183,7 +188,7 @@ export function fetchMediaPlayingEpisodeProcess(r: TmpRequestResp<typeof fetchMe
     if (matched) {
       return {
         ...matched,
-        currentTime: cur_chapter.progress,
+        currentTime: progress,
         curFile: matched.files[0],
       };
     }
@@ -193,7 +198,7 @@ export function fetchMediaPlayingEpisodeProcess(r: TmpRequestResp<typeof fetchMe
     }
     return {
       ...first,
-      currentTime: 0,
+      currentTime: progress,
       curFile: first.files[0],
     };
   })();
@@ -222,7 +227,7 @@ export type NovelChapter = {
   files: {
     id: string;
     name: string;
-    // content: string[];
+    source_name: string;
   }[];
 };
 export type CurNovelChapter = NovelChapter & {
@@ -253,10 +258,11 @@ export function fetchChaptersProcess(r: TmpRequestResp<typeof fetchChapters>) {
         name,
         order,
         files: files.map((file) => {
-          const { id, name } = file;
+          const { id, name, from_source } = file;
           return {
             id,
             name,
+            source_name: from_source.name,
             // content: content.split("\n"),
           };
         }),

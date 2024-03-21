@@ -5,9 +5,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowLeft, ArrowUp, ChevronLeft, Loader2 } from "lucide-react";
 
 import { ScrollViewCore } from "@/domains/ui/scroll-view";
-import { useInitialize } from "@/hooks";
-import { cn } from "@/utils";
 import { connect } from "@/domains/ui/scroll-view/connect.web";
+import { useInitialize } from "@/hooks/index";
+import { cn } from "@/utils/index";
 
 export const ScrollView = React.memo(
   (
@@ -194,7 +194,7 @@ const Content = React.memo((props: { store: ScrollViewCore } & React.HTMLAttribu
   return (
     <div
       ref={$page}
-      className={props.className}
+      className={cn("__a", props.className)}
       // style={(() => {
       //   const styles: React.CSSProperties = {
       //     ...(props.style || {}),
@@ -253,16 +253,6 @@ const Content = React.memo((props: { store: ScrollViewCore } & React.HTMLAttribu
           scrollTop: event.currentTarget.scrollTop,
         });
       }}
-      // onAnimationEnd={(event) => {
-      //   const $page = event.currentTarget;
-      //   connect(store, $page);
-      //   const { clientWidth, clientHeight, scrollHeight } = $page;
-      //   store.setRect({
-      //     width: clientWidth,
-      //     height: clientHeight,
-      //     contentHeight: scrollHeight,
-      //   });
-      // }}
     >
       {props.children}
     </div>

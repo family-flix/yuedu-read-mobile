@@ -16,19 +16,16 @@ import {
   Tv,
 } from "lucide-react";
 
-// import { client } from "@/store/request";
 import { infoRequest, messageList } from "@/store/index";
-// import { messagesPage, inviteeListPage } from "@/store/views";
-import { inviteMember, reportSomething } from "@/services";
+import { reportSomething } from "@/services";
 import { getSystemTheme, useTheme } from "@/components/Theme";
-import { Button, Dialog, ScrollView, LazyImage, Input } from "@/components/ui";
+import { Dialog, ScrollView, LazyImage, Input } from "@/components/ui/index";
 import { Show } from "@/components/ui/show";
-import { ButtonCore, DialogCore, ScrollViewCore, InputCore, ImageCore } from "@/domains/ui";
+import { DialogCore, ScrollViewCore, InputCore, ImageCore } from "@/domains/ui/index";
 import { RequestCoreV2 } from "@/domains/request/v2";
-import { RequestCore } from "@/domains/request";
 import { MultipleClickCore } from "@/domains/utils/multiple_click";
-import { ReportTypes, __VERSION__ } from "@/constants";
-import { useInitialize, useInstance } from "@/hooks";
+import { ReportTypes, __VERSION__ } from "@/constants/index";
+import { useInitialize, useInstance } from "@/hooks/index";
 import { ViewComponent } from "@/store/types";
 
 export const HomeMinePage: ViewComponent = React.memo((props) => {

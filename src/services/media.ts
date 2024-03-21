@@ -23,8 +23,8 @@ export function fetchNovelsInShelf(params: FetchParams & { keyword: string }) {
       name: string;
       overview: string;
       cover_path: string;
-      latest_chapter_name: string;
-      latest_chapter_created: string;
+      latest_chapter_name: string | null;
+      latest_chapter_created: string | null;
       cur_chapter_name: string | null;
       updated: string | null;
       author: {
@@ -70,10 +70,13 @@ export function fetchNovelsInShelfProcess(
                 updated_at: `${relative_time_from_now(updated)}`,
               }
             : null,
-        latest_chapter: {
-          name: latest_chapter_name,
-          created_at: relative_time_from_now(latest_chapter_created),
-        },
+        latest_chapter:
+          latest_chapter_name && latest_chapter_created
+            ? {
+                name: latest_chapter_name,
+                created_at: relative_time_from_now(latest_chapter_created),
+              }
+            : null,
         author,
       };
     }),

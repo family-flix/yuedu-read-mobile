@@ -55,13 +55,12 @@ const menus = [
 
 export const MovieMediaSettings = (props: {
   store: NovelReaderCore;
-  store2: PlayerCore;
   app: ViewComponentProps["app"];
   client: ViewComponentProps["client"];
   storage: ViewComponentProps["storage"];
   history: ViewComponentProps["history"];
 }) => {
-  const { store, app, client, history, storage, store2 } = props;
+  const { store, app, client, history, storage } = props;
 
   const memberTokenRequest = useInstance(
     () =>
@@ -197,8 +196,8 @@ ${url}`;
   const [menuIndex, setMenuIndex] = useState<MediaSettingsMenuKey>(MediaSettingsMenuKey.Resolution);
   const [state, setState] = useState(store.state);
   const [curSource, setCurSource] = useState(store.state.curSource);
-  const [playerState, setPlayerState] = useState(store2.state);
-  const [rate, setRate] = useState(store2._curRate);
+  // const [playerState, setPlayerState] = useState(store2.state);
+  // const [rate, setRate] = useState(store2._curRate);
   const [member, setMember] = useState(inviteeSelect.$list.response);
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [curReportValue, setCurReportValue] = useState(curReport.value);
@@ -217,12 +216,6 @@ ${url}`;
     });
     store.onSourceFileChange((v) => {
       setCurSource(v);
-    });
-    store2.onRateChange((v) => {
-      setRate(v.rate);
-    });
-    store2.onStateChange((v) => {
-      setPlayerState(v);
     });
     inviteeSelect.onResponseChange((v) => {
       setMember(v);
@@ -246,12 +239,12 @@ ${url}`;
                 showMenuContent(MediaSettingsMenuKey.SourceFile);
               }}
             >
-              <div>视频源</div>
+              <div>书源</div>
               <div className=" text-w-fg-1">
                 <ChevronRight className="w-5 h-5" />
               </div>
             </div>
-            <div
+            {/* <div
               className="flex items-center justify-between py-2 px-4"
               onClick={() => {
                 showMenuContent(MediaSettingsMenuKey.Rate);
@@ -262,8 +255,8 @@ ${url}`;
                 <div className="px-2">{playerState.rate}x</div>
                 <ChevronRight className="w-5 h-5" />
               </div>
-            </div>
-            <div
+            </div> */}
+            {/* <div
               className="flex items-center justify-between py-2 px-4"
               onClick={() => {
                 showMenuContent(MediaSettingsMenuKey.Share);
@@ -274,7 +267,7 @@ ${url}`;
               <div className="flex items-center space-x-2 text-w-fg-1">
                 <ChevronRight className="w-5 h-5" />
               </div>
-            </div>
+            </div> */}
             <div
               className="flex items-center justify-between py-2 px-4"
               onClick={() => {
@@ -355,12 +348,12 @@ ${url}`;
                         <div className="max-h-full overflow-y-auto px-4 text-w-fg-1">
                           <div className="pb-24">
                             {state.curSource.files.map((s) => {
-                              const { id, name } = s;
+                              const { id, name, source_name } = s;
                               return (
                                 <div
                                   key={id}
                                   className={cn(
-                                    "flex items-center justify-between p-4 rounded-md cursor-pointer",
+                                    "flex items-center justify-between py-4 rounded-md cursor-pointer",
                                     curSource?.id === id ? "bg-w-bg-active" : ""
                                   )}
                                   onClick={async () => {
@@ -372,10 +365,14 @@ ${url}`;
                                       fileIcon.clear();
                                       return;
                                     }
+                                    fileIcon.set(4);
                                     fileIcon.clear();
                                   }}
                                 >
-                                  <div className="break-all">{name}</div>
+                                  <div>
+                                    <div className="break-all">{name}</div>
+                                    <div className="text-w-fg-2 text-sm">{source_name}</div>
+                                  </div>
                                   <DynamicContent
                                     className="ml-4"
                                     store={fileIcon.bind(id)}
@@ -408,114 +405,53 @@ ${url}`;
                   </div>
                 );
               }
-              if (menuIndex === MediaSettingsMenuKey.Rate) {
-                return (
-                  <div>
-                    {(() => {
-                      return (
-                        <div className="max-h-full overflow-y-auto px-4 text-w-fg-1">
-                          <div className="pb-24">
-                            {[0.5, 0.75, 1, 1.25, 1.5, 2].map((rateOpt, index) => {
-                              return (
-                                <div
-                                  key={index}
-                                  className={cn(
-                                    "flex items-center justify-between p-4 rounded-md cursor-pointer",
-                                    rate === rateOpt ? "bg-w-bg-active" : ""
-                                  )}
-                                  onClick={() => {
-                                    rateIcon.select(rateOpt);
-                                    rateIcon.set(2);
-                                    store2.changeRate(rateOpt);
-                                    rateIcon.clear();
-                                    storage.merge("player_settings", {
-                                      rate: rateOpt,
-                                    });
-                                  }}
-                                >
-                                  <div className="break-all">{rateOpt}x</div>
-                                  <DynamicContent
-                                    className="ml-4"
-                                    store={rateIcon.bind(rateOpt)}
-                                    options={[
-                                      {
-                                        value: 1,
-                                        content: null,
-                                      },
-                                      {
-                                        value: 2,
-                                        content: (
-                                          <Show when={rate === rateOpt}>
-                                            <div>
-                                              <CheckCircle2 className="w-6 h-6" />
-                                            </div>
-                                          </Show>
-                                        ),
-                                      },
-
-                                      {
-                                        value: 3,
-                                        content: <Loader className="w-6 h-6 animate animate-spin" />,
-                                      },
-                                    ]}
-                                  />
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                );
-              }
-              if (menuIndex === MediaSettingsMenuKey.Share) {
-                return (
-                  <div className="max-h-full overflow-y-auto px-4 text-w-fg-1">
-                    <div className="pb-24">
-                      <ListView
-                        wrapClassName="flex-1 overflow-y-auto"
-                        className="max-h-full flex flex-col h-full"
-                        store={inviteeSelect.$list}
-                        skeleton={
-                          <div className="flex items-center justify-between space-x-2 p-4 rounded-md cursor-pointer">
-                            <div className="w-8 h-8 bg-slate-300 rounded-full">
-                              <Skeleton className="w-[32px] h-[32px]" />
-                            </div>
-                            <div className="flex-1">
-                              <Skeleton className="h-[32px] w-[180px]"></Skeleton>
-                            </div>
-                          </div>
-                        }
-                      >
-                        <div className="space-y-4 flex-1 overflow-y-auto">
-                          {member.dataSource.map((member) => {
-                            const { id, remark } = member;
-                            return (
-                              <div
-                                key={id}
-                                className="flex items-center justify-between space-x-2 p-4 rounded-md cursor-pointer"
-                                onClick={() => {
-                                  inviteeSelect.select(member);
-                                }}
-                              >
-                                <div className="flex items-center justify-between bg-slate-300 rounded-full">
-                                  <div className="w-8 h-8 text-xl text-center text-slate-500">
-                                    {remark.slice(0, 1).toUpperCase()}
-                                  </div>
-                                </div>
-                                <div className="flex-1 w-0">
-                                  <h2 className="">{remark}</h2>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </ListView>
-                    </div>
-                  </div>
-                );
-              }
+              // if (menuIndex === MediaSettingsMenuKey.Share) {
+              //   return (
+              //     <div className="max-h-full overflow-y-auto px-4 text-w-fg-1">
+              //       <div className="pb-24">
+              //         <ListView
+              //           wrapClassName="flex-1 overflow-y-auto"
+              //           className="max-h-full flex flex-col h-full"
+              //           store={inviteeSelect.$list}
+              //           skeleton={
+              //             <div className="flex items-center justify-between space-x-2 p-4 rounded-md cursor-pointer">
+              //               <div className="w-8 h-8 bg-slate-300 rounded-full">
+              //                 <Skeleton className="w-[32px] h-[32px]" />
+              //               </div>
+              //               <div className="flex-1">
+              //                 <Skeleton className="h-[32px] w-[180px]"></Skeleton>
+              //               </div>
+              //             </div>
+              //           }
+              //         >
+              //           <div className="space-y-4 flex-1 overflow-y-auto">
+              //             {member.dataSource.map((member) => {
+              //               const { id, remark } = member;
+              //               return (
+              //                 <div
+              //                   key={id}
+              //                   className="flex items-center justify-between space-x-2 p-4 rounded-md cursor-pointer"
+              //                   onClick={() => {
+              //                     inviteeSelect.select(member);
+              //                   }}
+              //                 >
+              //                   <div className="flex items-center justify-between bg-slate-300 rounded-full">
+              //                     <div className="w-8 h-8 text-xl text-center text-slate-500">
+              //                       {remark.slice(0, 1).toUpperCase()}
+              //                     </div>
+              //                   </div>
+              //                   <div className="flex-1 w-0">
+              //                     <h2 className="">{remark}</h2>
+              //                   </div>
+              //                 </div>
+              //               );
+              //             })}
+              //           </div>
+              //         </ListView>
+              //       </div>
+              //     </div>
+              //   );
+              // }
               if (menuIndex === MediaSettingsMenuKey.Report) {
                 return (
                   <div className="max-h-full overflow-y-auto px-4 text-w-fg-1">

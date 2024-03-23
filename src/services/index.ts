@@ -4,7 +4,7 @@ import { FetchParams } from "@/domains/list/typing";
 import { TmpRequestResp, request } from "@/domains/request/utils";
 import { ListResponse, ListResponseWithCursor, RequestedResource, Result, UnpackedResult } from "@/types";
 import { MediaTypes, CollectionTypes, ReportTypes } from "@/constants";
-import { season_to_chinese_num } from "@/utils";
+import { relative_time_from_now, season_to_chinese_num } from "@/utils";
 
 export function reportSomething(body: {
   type: ReportTypes;
@@ -274,4 +274,37 @@ export function fetchTVChannelList(params: FetchParams) {
       url: string;
     }>
   >("/api/tv_live/list", params);
+}
+
+export function fetchNovelsHasUpdating(params: FetchParams) {
+  return request.post<
+    ListResponseWithCursor<{
+      id: string;
+      name: string;
+      cover_path: string;
+      latest_chapter_name: string;
+      created_at: string;
+    }>
+  >("/api/v1/wechat/novel/updated", {
+    page: params.page,
+    page_size: params.pageSize,
+  });
+}
+export function fetchNovelsHasUpdatingProcess(r: TmpRequestResp<typeof fetchNovelsHasUpdating>) {
+  if (r.error) {
+    return Result.Err(r.error.message);
+  }
+  return Result.Ok({
+    ...r.data,
+    list: r.data.list.map((novel) => {
+      const { id, name, cover_path, latest_chapter_name, created_at } = novel;
+      return {
+        id,
+        name,
+        cover_path,
+        text: latest_chapter_name,
+        created_at: relative_time_from_now(created_at),
+      };
+    }),
+  });
 }

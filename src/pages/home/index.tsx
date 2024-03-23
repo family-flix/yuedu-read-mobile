@@ -11,10 +11,12 @@ import { fetchNovelsInShelf, fetchNovelsInShelfProcess } from "@/services/media"
 import {
   fetchCollectionList,
   fetchCollectionListProcess,
+  fetchNovelsHasUpdating,
+  fetchNovelsHasUpdatingProcess,
   fetchUpdatedMediaToday,
   fetchUpdatedMediaTodayProcess,
 } from "@/services";
-import { Input, KeepAliveRouteView } from "@/components/ui";
+import { Input, KeepAliveRouteView, Sheet } from "@/components/ui";
 import { StackRouteView } from "@/components/ui/stack-route-view";
 import { Affix } from "@/components/ui/affix";
 import { MediaRequestCore } from "@/components/media-request";
@@ -35,19 +37,16 @@ import { MediaOriginCountry } from "@/constants";
 export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
   const { app, history, client, storage, pages, view, menu } = props;
 
-  const collectionList = useInstance(
+  const updatedNovelList = useInstance(
     () =>
       new ListCoreV2(
         new RequestCoreV2({
-          fetch: fetchCollectionList,
-          process: fetchCollectionListProcess,
+          fetch: fetchNovelsHasUpdating,
+          process: fetchNovelsHasUpdatingProcess,
           client,
         }),
         {
-          pageSize: 6,
-          onLoadingChange(loading) {
-            searchInput.setLoading(!collectionList.response.initial && loading);
-          },
+          pageSize: 3,
         }
       )
   );
@@ -102,9 +101,9 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
         //   });
         //   scrollView.stopPullToRefresh();
         // },
-        onReachBottom() {
-          collectionList.loadMore();
-        },
+        // onReachBottom() {
+        //   collectionList.loadMore();
+        // },
       })
   );
   const scrollView2 = useInstance(() => {
@@ -114,87 +113,6 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
       },
     });
   });
-  const tab = useInstance(
-    () =>
-      new TabHeaderCore<{
-        key: "id";
-        options: {
-          id: string;
-          name: PageKeys;
-          text: string;
-          query: Record<string, string>;
-        }[];
-      }>({
-        key: "id",
-        options: [
-          {
-            id: "recommended",
-            name: "root.home_layout.home_index.home_index_recommended",
-            text: "推荐",
-            query: {},
-          },
-          {
-            id: "history",
-            name: "root.home_layout.home_index.home_index_history",
-            text: "观看记录",
-            query: {},
-          },
-          {
-            id: "china",
-            name: "root.home_layout.home_index.home_index_season",
-            text: "电视剧",
-            query: {
-              language: MediaOriginCountry.CN,
-            },
-          },
-          // {
-          //   id: "animate",
-          //   text: "动漫",
-          // },
-          // {
-          //   id: "zongyi",
-          //   text: "综艺",
-          // },
-          {
-            id: "korean",
-            name: "root.home_layout.home_index.home_index_season",
-            text: "韩剧",
-            query: {
-              language: MediaOriginCountry.KR,
-            },
-          },
-          {
-            id: "jp",
-            name: "root.home_layout.home_index.home_index_season",
-            text: "日剧",
-            query: {
-              language: MediaOriginCountry.JP,
-            },
-          },
-          {
-            id: "us",
-            name: "root.home_layout.home_index.home_index_season",
-            text: "美剧",
-            query: {
-              language: MediaOriginCountry.US,
-            },
-          },
-        ],
-        onChange(value) {
-          const { name, query } = value;
-          history.push(name, query);
-        },
-        onMounted() {
-          console.log("[PAGE]home/index - tab-header onMounted", history.$router.query);
-          const key = history.$router.query.key;
-          if (!key) {
-            tab.selectById("china", { ignore: true });
-            return;
-          }
-          tab.selectById(key, { ignore: true });
-        },
-      })
-  );
   const searchInput = useInstance(
     () =>
       new InputCore({
@@ -250,11 +168,13 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
     },
   });
   const image = useInstance(() => new ImageInListCore());
+  const updatedNovelDialog = useInstance(() => new DialogCore({ title: "有更新", footer: false }));
+  const image2 = useInstance(() => new ImageInListCore());
 
   const [subViews, setSubViews] = useState(view.subViews);
   const [messageResponse, setMessageResponse] = useState(messageList.response);
   const [response, setResponse] = useState(list.response);
-  const { dataSource } = response;
+  const [updateNovelResponse, setUpdateNovelResponse] = useState(updatedNovelList.response);
   // const [updatedMediaListState, setUpdatedMediaListState] = useState(updatedMediaList.response);
   // const [historyState, setHistoryState] = useState(historyList.response);
   const [height, setHeight] = useState(affix.height);
@@ -272,14 +192,6 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
     });
     view.onSubViewsChange((nextSubViews) => {
       setSubViews(nextSubViews);
-    });
-    history.onRouteChange(({ href, query }) => {
-      const { key } = query;
-      if (!tab.mounted) {
-        return;
-      }
-      console.log("[PAGE]home/index - history.onRouteChange", href, query);
-      tab.handleChangeById(key);
     });
     affix.onMounted(({ height }) => {
       setHeight(height);
@@ -299,7 +211,7 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
       });
       menu.onRefresh(async () => {
         scrollView.startPullToRefresh();
-        collectionList.init(search);
+        // collectionList.init(search);
         historyList.init();
         updatedMediaList.run().then(() => {
           scrollView.stopPullToRefresh();
@@ -312,7 +224,14 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
     list.onStateChange((v) => {
       setResponse(v);
     });
+    updatedNovelList.onStateChange((v) => {
+      if (v.dataSource.length !== 0) {
+        updatedNovelDialog.show();
+        setUpdateNovelResponse(v);
+      }
+    });
     list.init({ language: view.query.language });
+    updatedNovelList.init();
     // collectionList.onStateChange((nextResponse) => {
     //   setResponse(nextResponse);
     // });
@@ -422,7 +341,7 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
               }
             >
               {(() => {
-                return dataSource.map((season) => {
+                return response.dataSource.map((season) => {
                   const { id, name, cover_path, author, latest_chapter, cur_chapter } = season;
                   return (
                     <div
@@ -481,6 +400,37 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
           </ScrollView>
         </div>
       </div>
+      <Sheet title="有更新" store={updatedNovelDialog}>
+        <div className="p-4 space-y-4">
+          {updateNovelResponse.dataSource.map((novel) => {
+            const { id, name, cover_path, text, created_at } = novel;
+            return (
+              <div
+                className="flex"
+                onClick={() => {
+                  history.push("root.season_playing", { id });
+                  updatedNovelDialog.hide();
+                }}
+              >
+                <div className="w-[68px] h-[92px]">
+                  <LazyImage
+                    className="w-full h-full rounded-md object-cover"
+                    store={image2.bind(cover_path)}
+                    alt={name}
+                  />
+                </div>
+                <div className="ml-2">
+                  <div className="text-lg text-w-fg-1">{name}</div>
+                  <div className="mt-2 text-w-fg-2 text-sm">
+                    <div className="">{created_at}</div>
+                    <div className="">{text}</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Sheet>
     </>
   );
 });

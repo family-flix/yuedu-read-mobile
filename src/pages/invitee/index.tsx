@@ -107,6 +107,7 @@ export const InviteeListPage: ViewComponent = React.memo((props) => {
   const scrollView = useInstance(
     () =>
       new ScrollViewCore({
+        os: app.env,
         // onPullToRefresh() {
         //   helper.refresh();
         // },

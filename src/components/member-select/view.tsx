@@ -4,20 +4,23 @@
 import { useState } from "react";
 
 import { ButtonCore, ScrollViewCore } from "@/domains/ui";
+import { Application } from "@/domains/app";
 import { Button, Input, ListView, ScrollView, Skeleton } from "@/components/ui";
+import { useInitialize, useInstance } from "@/hooks";
 import { cn } from "@/utils";
 
 import { InviteeSelectCore } from "./store";
-import { useInitialize, useInstance } from "@/hooks";
 
-export const InviteeSelect = (props: { store: InviteeSelectCore }) => {
-  const { store } = props;
+export const InviteeSelect = (props: { app: Application; store: InviteeSelectCore }) => {
+  const { app, store } = props;
 
   const [listResponse, setListResponse] = useState(store.response);
   const [cur, setCur] = useState(store.value);
 
   const scrollView = useInstance(() => {
     return new ScrollViewCore({
+      os: app.env,
+      offset: 84,
       onReachBottom() {
         store.$list.loadMore();
       },

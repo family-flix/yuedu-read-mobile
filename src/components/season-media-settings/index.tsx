@@ -132,7 +132,7 @@ ${url}`;
       })
   );
   const subtitleIcon = useInstance(() => new DynamicContentInListCore({ value: 2 }));
-  const scroll = useInstance(() => new ScrollViewCore());
+  const scroll = useInstance(() => new ScrollViewCore({ os: app.env }));
   const inviteeSelect = useInstance(
     () =>
       new InviteeSelectCore({

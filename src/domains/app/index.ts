@@ -116,10 +116,12 @@ export class Application extends BaseDomain<TheTypesOfEvents> {
     wechat: boolean;
     ios: boolean;
     android: boolean;
+    pc: boolean;
   } = {
     wechat: false,
     ios: false,
     android: false,
+    pc: false,
   };
   orientation = OrientationTypes.Vertical;
   curDeviceSize: DeviceSizeTypes = "md";

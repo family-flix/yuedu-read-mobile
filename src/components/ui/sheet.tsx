@@ -2,10 +2,10 @@ import * as React from "react";
 import { VariantProps, cva } from "class-variance-authority";
 import { X } from "lucide-react";
 
+import { Show } from "@/packages/ui/show";
 import { DialogCore } from "@/domains/ui/dialog";
 import * as DialogPrimitive from "@/packages/ui/dialog";
 import { cn } from "@/utils";
-import { Show } from "@/packages/ui/show";
 
 const sheetVariants = cva("fixed z-50 scale-100 gap-4 bg-w-bg-2 text-w-fg-0 opacity-100", {
   variants: {
@@ -182,7 +182,13 @@ const Content = (
 };
 
 const Header = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col h-14 rounded-tl-xl rounded-tr-xl bg-w-bg-2 border-b border-w-bg-3 text-center sm:text-left", className)} {...props} />
+  <div
+    className={cn(
+      "flex flex-col h-14 rounded-tl-xl rounded-tr-xl bg-w-bg-2 border-b border-w-bg-3 text-center sm:text-left",
+      className
+    )}
+    {...props}
+  />
 );
 
 const Footer = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

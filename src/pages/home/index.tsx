@@ -31,7 +31,7 @@ import { ListCoreV2 } from "@/domains/list/v2";
 import { useInitialize, useInstance } from "@/hooks";
 import { Button, LazyImage, ListView, ScrollView, Skeleton } from "@/components/ui";
 import { MediaTypes } from "@/constants";
-import { cn } from "@/utils";
+import { cn, sleep } from "@/utils";
 import { MediaOriginCountry } from "@/constants";
 
 export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
@@ -70,49 +70,6 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
         }
       )
   );
-  const scrollView = useInstance(
-    () =>
-      new ScrollViewCore({
-        _name: "1",
-        onScroll(pos) {
-          affix.handleScroll(pos);
-          if (!menu) {
-            return;
-          }
-          if (pos.scrollTop > app.screen.height) {
-            menu.setCanTop({
-              icon: <ArrowUp className="w-6 h-6" />,
-              text: "回到顶部",
-            });
-            return;
-          }
-          if (pos.scrollTop === 0) {
-            menu.setCanRefresh();
-            return;
-          }
-          menu.disable();
-        },
-        // async onPullToRefresh() {
-        //   updatedMediaList.reload();
-        //   historyList.refresh();
-        //   await collectionList.refresh();
-        //   app.tip({
-        //     text: ["刷新成功"],
-        //   });
-        //   scrollView.stopPullToRefresh();
-        // },
-        // onReachBottom() {
-        //   collectionList.loadMore();
-        // },
-      })
-  );
-  const scrollView2 = useInstance(() => {
-    return new ScrollViewCore({
-      onReachBottom() {
-        // ...
-      },
-    });
-  });
   const searchInput = useInstance(
     () =>
       new InputCore({
@@ -161,12 +118,26 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
         }
       )
   );
-  const scroll = new ScrollViewCore({
-    _name: "inner",
-    onReachBottom() {
-      list.loadMore();
-    },
-  });
+  const scroll = useInstance(
+    () =>
+      new ScrollViewCore({
+        os: app.env,
+        offset: 64,
+        async onPullToRefresh() {
+          await updatedMediaList.reload();
+          await sleep(1000);
+          app.tip({
+            text: ["刷新成功"],
+          });
+          scroll.finishPullToRefresh();
+        },
+        async onReachBottom() {
+          await list.loadMore();
+          await sleep(1000);
+          scroll.finishLoadingMore();
+        },
+      })
+  );
   const image = useInstance(() => new ImageInListCore());
   const updatedNovelDialog = useInstance(() => new DialogCore({ title: "有更新", footer: false }));
   const image2 = useInstance(() => new ImageInListCore());
@@ -205,19 +176,19 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
         language: language.join("|"),
       };
     })();
-    if (menu) {
-      menu.onScrollToTop(() => {
-        scrollView.scrollTo({ top: 0 });
-      });
-      menu.onRefresh(async () => {
-        scrollView.startPullToRefresh();
-        // collectionList.init(search);
-        historyList.init();
-        updatedMediaList.run().then(() => {
-          scrollView.stopPullToRefresh();
-        });
-      });
-    }
+    // if (menu) {
+    //   menu.onScrollToTop(() => {
+    //     scrollView.scrollTo({ top: 0 });
+    //   });
+    //   menu.onRefresh(async () => {
+    //     scrollView.startPullToRefresh();
+    //     // collectionList.init(search);
+    //     historyList.init();
+    //     updatedMediaList.run().then(() => {
+    //       scrollView.stopPullToRefresh();
+    //     });
+    //   });
+    // }
     messageList.onStateChange((nextState) => {
       setMessageResponse(nextState);
     });
@@ -255,150 +226,146 @@ export const HomeIndexPage: ViewComponentWithMenu = React.memo((props) => {
 
   return (
     <>
-      <div className="z-10">
-        <Affix store={affix} className="z-50 w-full bg-w-bg-0">
-          <div className="flex items-center justify-between w-full py-2 px-4 text-w-fg-0 space-x-4">
-            <div className="relative flex-1 w-0">
-              <Input store={searchInput} prefix={<Search className="w-5 h-5" />} />
-              <div
-                className="absolute z-10 inset-0"
-                onClick={() => {
-                  // app.showView(mediaSearchPage);
-                  history.push("root.search");
-                }}
-              ></div>
+      <div className="z-10 h-full w-full">
+        <div className="flex items-center justify-between w-full py-2 px-4 text-w-fg-0 bg-w-bg-0 space-x-4">
+          <div className="relative flex-1 w-0">
+            <Input store={searchInput} prefix={<Search className="w-5 h-5" />} />
+            <div
+              className="absolute z-10 inset-0"
+              onClick={() => {
+                // app.showView(mediaSearchPage);
+                history.push("root.search");
+              }}
+            ></div>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div
+              className="relative"
+              onClick={() => {
+                history.push("root.messages");
+                // app.showView(messagesPage);
+                // app.tip({
+                //   text: ["测试消息"],
+                // });
+              }}
+            >
+              <Bell className="w-6 h-6" />
+              <Show when={!!messageResponse.total}>
+                <div
+                  className="absolute top-[-6px] right-0 px-[8px] h-[16px] rounded-xl break-all whitespace-nowrap text-[12px] border-w-bg-0 dark:border-w-fg-0 bg-w-red text-w-bg-0 dark:text-w-fg-0 translate-x-1/2"
+                  style={{
+                    lineHeight: "16px",
+                  }}
+                >
+                  {messageResponse.total}
+                </div>
+              </Show>
             </div>
-            <div className="flex items-center space-x-4">
-              <div
-                className="relative"
-                onClick={() => {
-                  history.push("root.messages");
-                  // app.showView(messagesPage);
-                  // app.tip({
-                  //   text: ["测试消息"],
-                  // });
-                }}
-              >
-                <Bell className="w-6 h-6" />
-                <Show when={!!messageResponse.total}>
-                  <div
-                    className="absolute top-[-6px] right-0 px-[8px] h-[16px] rounded-xl break-all whitespace-nowrap text-[12px] border-w-bg-0 dark:border-w-fg-0 bg-w-red text-w-bg-0 dark:text-w-fg-0 translate-x-1/2"
-                    style={{
-                      lineHeight: "16px",
-                    }}
-                  >
-                    {messageResponse.total}
-                  </div>
-                </Show>
-              </div>
-              <div
-                className="relative"
-                onClick={() => {
-                  history.push("root.mine");
-                  // app.showView(homeMinePage);
-                }}
-              >
-                <User className="w-6 h-6" />
-              </div>
+            <div
+              className="relative"
+              onClick={() => {
+                history.push("root.mine");
+                // app.showView(homeMinePage);
+              }}
+            >
+              <User className="w-6 h-6" />
             </div>
           </div>
-        </Affix>
-        <div className="absolute inset-0 flex flex-col" style={{ top: height }}>
-          <ScrollView store={scroll}>
-            <ListView
-              store={list}
-              className="relative grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 pt-4"
-              skeleton={
-                <>
-                  <div className="flex px-3 pb-3 cursor-pointer">
-                    <div className="relative w-[86px] h-[115px] mr-4">
-                      <Skeleton className="w-full h-full" />
-                    </div>
-                    <div className="mt-2 flex-1 max-w-full overflow-hidden text-ellipsis">
-                      <Skeleton className="w-full h-[32px]"></Skeleton>
-                      <Skeleton className="mt-1 w-24 h-[24px]"></Skeleton>
-                      <Skeleton className="mt-2 w-32 h-[22px]"></Skeleton>
-                    </div>
-                  </div>
-                  <div className="flex px-3 pb-3 cursor-pointer">
-                    <div className="relative w-[86px] h-[115px] mr-4">
-                      <Skeleton className="w-full h-full" />
-                    </div>
-                    <div className="mt-2 flex-1 max-w-full overflow-hidden text-ellipsis">
-                      <Skeleton className="w-full h-[32px]"></Skeleton>
-                      <Skeleton className="mt-1 w-24 h-[24px]"></Skeleton>
-                      <Skeleton className="mt-2 w-32 h-[22px]"></Skeleton>
-                    </div>
-                  </div>
-                </>
-              }
-              extraEmpty={
-                <div className="mt-2">
-                  <Button store={mediaRequestBtn} variant="subtle">
-                    提交想看的小说
-                  </Button>
-                </div>
-              }
-            >
-              {(() => {
-                return response.dataSource.map((season) => {
-                  const { id, name, cover_path, author, latest_chapter, cur_chapter } = season;
-                  return (
-                    <div
-                      key={id}
-                      className="flex px-3 pb-3 cursor-pointer"
-                      onClick={() => {
-                        history.push("root.season_playing", { id });
-                      }}
-                    >
-                      <div className="relative w-[86px] h-[115px] mr-4 rounded-lg overflow-hidden">
-                        <LazyImage className="w-full h-full object-cover" store={image.bind(cover_path)} alt={name} />
-                      </div>
-                      <div className="flex-1 max-w-full overflow-hidden">
-                        <div className="flex items-center">
-                          <h2 className="text-xl text-w-fg-0">{name}</h2>
-                        </div>
-                        {author ? (
-                          <div className="mt-1 text-sm overflow-hidden text-ellipsis break-keep whitespace-nowrap">
-                            {author.name}
-                          </div>
-                        ) : null}
-                        {cur_chapter ? (
-                          <div
-                            className="flex items-center mt-4 text-sm whitespace-nowrap"
-                            style={{ fontSize: 12, lineHeight: "12px" }}
-                          >
-                            <p className="mr-2">读到</p>
-                            <div>{cur_chapter.name}</div>
-                          </div>
-                        ) : null}
-                        {latest_chapter ? (
-                          <div
-                            className="flex items-center mt-2 text-sm whitespace-nowrap"
-                            style={{ fontSize: 12, lineHeight: "12px" }}
-                          >
-                            <p className="mr-2">最新</p>
-                            <div>{latest_chapter.name}</div>
-                          </div>
-                        ) : (
-                          <div
-                            className="flex items-center mt-2 text-sm whitespace-nowrap"
-                            style={{ fontSize: 12, lineHeight: "12px" }}
-                          >
-                            <div className="mr-2">
-                              <AlertTriangle className="w-3 h-3" />
-                            </div>
-                            <div>暂无章节内容</div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                });
-              })()}
-            </ListView>
-          </ScrollView>
         </div>
+        <ScrollView className="fixed top-[56px] bottom-0 w-full h-auto" store={scroll}>
+          <ListView
+            store={list}
+            className="relative grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 pt-4"
+            skeleton={
+              <>
+                <div className="flex px-3 pb-3 cursor-pointer">
+                  <div className="relative w-[86px] h-[115px] mr-4">
+                    <Skeleton className="w-full h-full" />
+                  </div>
+                  <div className="mt-2 flex-1 max-w-full overflow-hidden text-ellipsis">
+                    <Skeleton className="w-full h-[32px]"></Skeleton>
+                    <Skeleton className="mt-1 w-24 h-[24px]"></Skeleton>
+                    <Skeleton className="mt-2 w-32 h-[22px]"></Skeleton>
+                  </div>
+                </div>
+                <div className="flex px-3 pb-3 cursor-pointer">
+                  <div className="relative w-[86px] h-[115px] mr-4">
+                    <Skeleton className="w-full h-full" />
+                  </div>
+                  <div className="mt-2 flex-1 max-w-full overflow-hidden text-ellipsis">
+                    <Skeleton className="w-full h-[32px]"></Skeleton>
+                    <Skeleton className="mt-1 w-24 h-[24px]"></Skeleton>
+                    <Skeleton className="mt-2 w-32 h-[22px]"></Skeleton>
+                  </div>
+                </div>
+              </>
+            }
+            extraEmpty={
+              <div className="mt-2">
+                <Button store={mediaRequestBtn} variant="subtle">
+                  提交想看的小说
+                </Button>
+              </div>
+            }
+          >
+            {(() => {
+              return response.dataSource.map((season) => {
+                const { id, name, cover_path, author, latest_chapter, cur_chapter } = season;
+                return (
+                  <div
+                    key={id}
+                    className="flex px-3 pb-3 cursor-pointer"
+                    onClick={() => {
+                      history.push("root.season_playing", { id });
+                    }}
+                  >
+                    <div className="relative w-[86px] h-[115px] mr-4 rounded-lg overflow-hidden">
+                      <LazyImage className="w-full h-full object-cover" store={image.bind(cover_path)} alt={name} />
+                    </div>
+                    <div className="flex-1 max-w-full overflow-hidden">
+                      <div className="flex items-center">
+                        <h2 className="text-xl text-w-fg-0">{name}</h2>
+                      </div>
+                      {author ? (
+                        <div className="mt-1 text-sm overflow-hidden text-ellipsis break-keep whitespace-nowrap">
+                          {author.name}
+                        </div>
+                      ) : null}
+                      {cur_chapter ? (
+                        <div
+                          className="flex items-center mt-4 text-sm whitespace-nowrap"
+                          style={{ fontSize: 12, lineHeight: "12px" }}
+                        >
+                          <p className="mr-2">读到</p>
+                          <div>{cur_chapter.name}</div>
+                        </div>
+                      ) : null}
+                      {latest_chapter ? (
+                        <div
+                          className="flex items-center mt-2 text-sm whitespace-nowrap"
+                          style={{ fontSize: 12, lineHeight: "12px" }}
+                        >
+                          <p className="mr-2">最新</p>
+                          <div>{latest_chapter.name}</div>
+                        </div>
+                      ) : (
+                        <div
+                          className="flex items-center mt-2 text-sm whitespace-nowrap"
+                          style={{ fontSize: 12, lineHeight: "12px" }}
+                        >
+                          <div className="mr-2">
+                            <AlertTriangle className="w-3 h-3" />
+                          </div>
+                          <div>暂无章节内容</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+          </ListView>
+        </ScrollView>
       </div>
       <Sheet title="有更新" store={updatedNovelDialog}>
         <div className="p-4 space-y-4">

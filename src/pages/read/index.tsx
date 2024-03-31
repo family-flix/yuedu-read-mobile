@@ -84,9 +84,7 @@ class SeasonPlayingPageLogic<
 }
 class SeasonPlayingPageView {
   $view: RouteViewCore;
-  $scroll = new ScrollViewCore({
-    _name: "reading-page",
-  });
+  $scroll: ScrollViewCore;
 
   $mask = new PresenceCore({ mounted: true, open: true });
   $top = new PresenceCore({ mounted: true, open: true });
@@ -96,7 +94,7 @@ class SeasonPlayingPageView {
   $subtitle = new PresenceCore({});
   $settings = new DialogCore();
   $episodes = new DialogCore();
-  $episodeView = new ScrollViewCore();
+  $episodeView: ScrollViewCore;
   $nextEpisode = new DynamicContentCore({
     value: 1,
   });
@@ -111,9 +109,18 @@ class SeasonPlayingPageView {
   visible = true;
   timer: null | NodeJS.Timeout = null;
 
-  constructor(props: { view: RouteViewCore }) {
-    const { view } = props;
+  constructor(props: { app: Application; view: RouteViewCore }) {
+    const { app, view } = props;
     this.$view = view;
+
+    this.$scroll = new ScrollViewCore({
+      os: app.env,
+      offset: 1200,
+    });
+    this.$episodeView = new ScrollViewCore({
+      os: app.env,
+      offset: 84,
+    });
   }
 
   show() {
@@ -177,7 +184,7 @@ export const SeasonPlayingPageV2: ViewComponent = React.memo((props) => {
   const { app, client, history, storage, view } = props;
 
   const $logic = useInstance(() => new SeasonPlayingPageLogic({ app, client, storage }));
-  const $page = useInstance(() => new SeasonPlayingPageView({ view }));
+  const $page = useInstance(() => new SeasonPlayingPageView({ app, view }));
 
   const [state, setProfile] = useState($logic.$tv.state);
   const [loading, setLoading] = useState($logic.$tv.loading);
@@ -193,6 +200,9 @@ export const SeasonPlayingPageV2: ViewComponent = React.memo((props) => {
       const { scrollTop } = pos;
       $logic.$tv.handleCurTimeChange({ currentTime: scrollTop, duration: $page.$scroll.rect.contentHeight || 0 });
     });
+    $page.$scroll.onMounted(() => {
+      $page.$scroll.hideIndicator();
+    });
     $logic.$tv.fetchProfile(view.query.id);
   });
 
@@ -200,8 +210,8 @@ export const SeasonPlayingPageV2: ViewComponent = React.memo((props) => {
     <>
       <ScrollView
         store={$page.$scroll}
-        className="bg-w-bg-0"
-        contentClassName="pb-12"
+        className="fixed left-0 top-0 bottom-0 w-full h-auto bg-w-bg-0"
+        // contentClassName="pb-12"
         onClick={() => {
           $page.prepareToggle();
         }}
@@ -242,7 +252,7 @@ export const SeasonPlayingPageV2: ViewComponent = React.memo((props) => {
                 })}
               </div>
               <div
-                className="mt-8 text-center text-w-fg-1"
+                className="py-8 text-center text-w-fg-1"
                 onClick={async (event) => {
                   event.stopPropagation();
                   setLoading(true);
@@ -297,7 +307,7 @@ export const SeasonPlayingPageV2: ViewComponent = React.memo((props) => {
             </Presence>
           </div>
           <div
-            className="fixed bottom-0 border-t border-w-bg-3 z-40 w-full bg-w-bg-0 safe-bottom"
+            className="fixed bottom-0 z-40 w-full"
             onClick={(e) => {
               e.stopPropagation();
             }}
@@ -310,7 +320,7 @@ export const SeasonPlayingPageV2: ViewComponent = React.memo((props) => {
               store={$page.$bottom}
             >
               <div
-                className="flex items-center flex-reverse space-x-4 w-full px-2 py-4"
+                className="flex items-center flex-reverse space-x-4 w-full px-2 py-4 border-t border-w-bg-3 bg-w-bg-0 safe-bottom"
                 onClick={(event) => {
                   event.stopPropagation();
                 }}

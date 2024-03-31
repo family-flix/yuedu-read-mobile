@@ -12,6 +12,7 @@ export const MediaSharePage: ViewComponent = React.memo((props) => {
   const scrollView = useInstance(
     () =>
       new ScrollViewCore({
+        os: app.env,
         onPullToBack() {
           history.back();
         },

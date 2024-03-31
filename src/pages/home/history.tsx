@@ -70,6 +70,7 @@ export const HomeHistoryPage: ViewComponentWithMenu = React.memo((props) => {
   const scrollView = useInstance(
     () =>
       new ScrollViewCore({
+        os: app.env,
         onScroll(pos) {
           if (!menu) {
             return;
@@ -130,7 +131,7 @@ export const HomeHistoryPage: ViewComponentWithMenu = React.memo((props) => {
       menu.onRefresh(async () => {
         scrollView.startPullToRefresh();
         await historyList.refresh();
-        scrollView.stopPullToRefresh();
+        scrollView.finishPullToRefresh();
       });
     }
     // console.log("[PAGE]history - useInitialize");

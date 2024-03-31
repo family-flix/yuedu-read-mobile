@@ -32,7 +32,7 @@ export const HomeSeasonTabContent: ViewComponent = React.memo((props) => {
       )
   );
   const scroll = new ScrollViewCore({
-    _name: "inner",
+    os: app.env,
     onReachBottom() {
       list.loadMore();
     },

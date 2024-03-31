@@ -57,7 +57,7 @@ export const MediaSearchPage: ViewComponent = React.memo((props) => {
         defaultHeight: 56,
       })
   );
-  const scrollView = useInstance(() => new ScrollViewCore({}));
+  const scrollView = useInstance(() => new ScrollViewCore({ os: app.env }));
   const settingsSheet = useInstance(() => new DialogCore());
   const poster = useInstance(() => new ImageInListCore());
   const searchInput = useInstance(

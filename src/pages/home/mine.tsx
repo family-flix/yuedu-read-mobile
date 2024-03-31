@@ -34,6 +34,7 @@ export const HomeMinePage: ViewComponent = React.memo((props) => {
   const scrollView = useInstance(
     () =>
       new ScrollViewCore({
+        os: app.env,
         // async onPullToRefresh() {
         //   await sleep(2000);
         //   scrollView.stopPullToRefresh();
@@ -181,7 +182,7 @@ export const HomeMinePage: ViewComponent = React.memo((props) => {
 
   return (
     <>
-      <ScrollView store={scrollView} className="bg-w-bg-0" contentClassName="h-full">
+      <ScrollView store={scrollView} className="bg-w-bg-0">
         <div className="w-full h-full">
           <div className="">
             <div className="flex items-center">
